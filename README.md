@@ -14,7 +14,7 @@ A repo for the project combining achievement in AS91906 &amp; AS91902
   * [ ] White box testing (just me testing parts of code as they're added)
 * [ ] Relevant implications (finish off this whole list)
 * [ ] Shown concept, as in, a demo of the final product
-* [ ] Evidence of designation and considered implications of selected structure (just one thick docstring in my database logic class should do it)
+* [ ] Evidence of designation and considered implications of selected structure (just one thick docstring in my database logic class should do it), but also of the language/s
 * [ ] Evidence of data integrity/testing procedures (making sure SQL injection can't happen, and invalid, malformed, or otherwise malicious data is sanitised and/or rejected
 * [ ] Evidence of queries (either by quote or by screenshot should be fine, and I can just comment a method or an instance of the method)
 * [ ] Evidence of customized data displays (a subset of data and data sorting should do this, as well as showing the data in different formats)
@@ -22,6 +22,12 @@ A repo for the project combining achievement in AS91906 &amp; AS91902
 * [ ] Showing data access - not too sure how I'll do this but I might restrict access in the code instead of on the database framework)
 * [ ] Showing the use of multiple tables (relational)
 * [ ] Showing use of tools and techniques (tools can just be deps and IDE, and I don't really know for techniques but this can be re-looked at later - I believe the evidence will present itself as the project develops)
+* [ ] Comments/documentation (docstrings, schema if appropriate, etc.)
+* [ ] Testing (see iterative improvement proof)
+* [ ] Following conventions of language
+* [ ] "Complex techniques" (as defined by the AS91906 spec)
+* [ ] Debugging (code coverage I guess, links into testing)
+
 
 ##### General to-do
 * [ ] Finish repo config (pull off of AS91896 and AS91892 config files)
