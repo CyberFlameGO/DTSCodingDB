@@ -38,5 +38,5 @@ A repo for the project combining achievement in AS91906 &amp; AS91902
 ##### Notes
 * [ ] Adapt database wrapper to be more flexible in terms of CRUD operations and checking
 * [ ] Potentially look into using a different database framework
-* [ ] \(remove this line later\) check python tab groups - has some info applicable here
+* [ ] \(remove this line later\) check python tab groups (+ https://docs.python.org/3/library/weakref.html) - has some info applicable here, and use gh projects.
 * [ ] \-
