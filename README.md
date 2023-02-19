@@ -11,6 +11,7 @@ A repo for the project combining achievement in AS91906 &amp; AS91902
   * Showing improvements made as a result of testing
   * Marking commits as minor when features are rough/the unpolished product \(before the feature is complete\)
   * [ ] Black box testing \(getting someone without knowledge of the code, to test the project, throughout the development even where it seems unnecessary, to conform to the requirements of the project\)
+   * [ ] Perhaps look at using Jetbrains' local TMS or the 'behave' Python tool to make this more trackable 
   * [ ] White box testing \(just me testing parts of code as they're added\)
 * [ ] Relevant implications \(finish off this whole list\)
 * [ ] Shown concept, as in, a demo of the final product
