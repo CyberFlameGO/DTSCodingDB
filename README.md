@@ -24,7 +24,7 @@ A repo for the project combining achievement in AS91906 &amp; AS91902
 * [ ] Showing the use of multiple tables (relational)
 * [ ] Showing use of tools and techniques \(tools can just be deps and IDE, and I don't really know for techniques but this can be re\-looked at later \- I believe the evidence will present itself as the project develops\)
 * [ ] Comments/documentation \(docstrings, schema if appropriate, etc.\)
-  * [ ] Schema \(the native DBMS one can be used but only to complement a provided database structure design \) + data dictionary
+  * [ ] Schema \(the native DBMS one can be used but only to complement a provided database structure design \) + data dictionary *\(a good idea is to use a Mermaid diagram so it's visualisable\)*
 * [ ] Testing \(see iterative improvement proof\)
 * [ ] Following conventions of language
 * [ ] "Complex techniques" \(as defined by the AS91906 spec\)
@@ -38,5 +38,6 @@ A repo for the project combining achievement in AS91906 &amp; AS91902
 ##### Notes
 * [ ] Adapt database wrapper to be more flexible in terms of CRUD operations and checking
 * [ ] Potentially look into using a different database framework
+* [ ] Perhaps make this project rely on queries for reusability \(make a super simple API and just make the webpages send requests to the API, instead of making the webpage routes contain the code to run if that makes sense\)
 * [ ] \(remove this line later\) check python tab groups (+ https://docs.python.org/3/library/weakref.html) - has some info applicable here, and use gh projects.
 * [ ] \-
