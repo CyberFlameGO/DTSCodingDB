@@ -39,5 +39,5 @@ A repo for the project combining achievement in AS91906 &amp; AS91902
 * [ ] Adapt database wrapper to be more flexible in terms of CRUD operations and checking
 * [ ] Potentially look into using a different database framework
 * [ ] Perhaps make this project rely on queries for reusability \(make a super simple API and just make the webpages send requests to the API, instead of making the webpage routes contain the code to run if that makes sense\)
-* [ ] \(remove this line later\) check python tab groups (+ https://docs.python.org/3/library/weakref.html) - has some info applicable here, and use gh projects.
+* [ ] \(remove this line later\) check python tab groups (+ https://docs.python.org/3/library/collections.html) - has some info applicable here, and use gh projects.
 * [ ] \-
