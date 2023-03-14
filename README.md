@@ -29,15 +29,16 @@ A repo for the project combining achievement in AS91906 &amp; AS91902
 * [ ] Following conventions of language
 * [ ] "Complex techniques" \(as defined by the AS91906 spec\)
 * [ ] Debugging \(code coverage I guess, links into testing\)
-
+* [ ] Store images in base64 in the database
+* [ ] For teacher emails use a regex to check if it's a valid teacher email and also filter domain.
 
 ##### General to\-do
-* [ ] Finish repo config \(pull off of AS91896 and AS91892 config files\)
-* [ ] Add .gitignore
+* [ ] Finish repo config \(pull off of AS91896 and AS91892 config files\) - merging of the repo-setup/init branch is not contingent on this.
+* [x] Add .gitignore
 
 ##### Notes
 * [ ] Adapt database wrapper to be more flexible in terms of CRUD operations and checking
 * [ ] Potentially look into using a different database framework
 * [ ] Perhaps make this project rely on queries for reusability \(make a super simple API and just make the webpages send requests to the API, instead of making the webpage routes contain the code to run if that makes sense\)
-* [ ] \(remove this line later\) check python tab groups (+ https://docs.python.org/3/library/collections.html) - has some info applicable here, and use gh projects.
+* [ ] GitHub Projects may be a good way to organise what I have to do
 * [ ] \-
