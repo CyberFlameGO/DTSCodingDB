@@ -7,9 +7,9 @@ A repo for the project combining achievement in AS91906 &amp; AS91902
 ## Planning
 ##### Evidence needed:
 * [ ] Iterative improvement proof \(git commit history can be part of this, but perhaps tagging commits with what type of improvement it is, and/or using semantic commit messages\)
-  * Showing feature addition
-  * Showing improvements made as a result of testing
-  * Marking commits as minor when features are rough/the unpolished product \(before the feature is complete\)
+  * [ ] Showing feature addition
+  * [ ] Showing improvements made as a result of testing
+  * [ ] Marking commits as minor when features are rough/the unpolished product \(before the feature is complete\)
   * [ ] Black box testing \(getting someone without knowledge of the code, to test the project, throughout the development even where it seems unnecessary, to conform to the requirements of the project\)
    * [ ] Perhaps look at using Jetbrains' local TMS or the 'behave' Python tool to make this more trackable 
   * [ ] White box testing \(just me testing parts of code as they're added\)
@@ -24,16 +24,17 @@ A repo for the project combining achievement in AS91906 &amp; AS91902
 * [ ] Showing the use of multiple tables (relational)
 * [ ] Showing use of tools and techniques \(tools can just be deps and IDE, and I don't really know for techniques but this can be re\-looked at later \- I believe the evidence will present itself as the project develops\)
 * [ ] Comments/documentation \(docstrings, schema if appropriate, etc.\)
-  * [ ] Schema \(the native DBMS one can be used but only to complement a provided database structure design \) + data dictionary *\(a good idea is to use a Mermaid diagram so it's visualisable\)*
+  * [ ] Schema \(the native DBMS one can be used but only to complement a provided database structure design\) + data dictionary *\(a good idea is to use a Mermaid diagram so it's visualisable\)*
 * [ ] Testing \(see iterative improvement proof\)
 * [ ] Following conventions of language
 * [ ] "Complex techniques" \(as defined by the AS91906 spec\)
 * [ ] Debugging \(code coverage I guess, links into testing\)
 * [ ] Store images in base64 in the database
-* [ ] For teacher emails use a regex to check if it's a valid teacher email and also filter domain.
+* [ ] For teacher emails use a regex to check if it's a valid teacher email and also filter domain
+* [ ] Prior to submitting the internal, pin all versions of dependencies in `requirements.txt`.
 
 ##### General to\-do
-* [ ] Finish repo config \(pull off of AS91896 and AS91892 config files\) - merging of the repo-setup/init branch is not contingent on this.
+* [ ] Finish repo config \(pull off of AS91896 and AS91892 config files\) - merging of the repo-setup/init branch is not contingent on this
 * [x] Add .gitignore
 
 ##### Notes
