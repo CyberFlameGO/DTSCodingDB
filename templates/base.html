@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang = "en">
+
+<head>
+    <meta charset = "utf-8">
+    <title>Maori Dictionary | Home</title>
+    <meta name = "viewport" content = "width=device-width, initial-scale=1">
+    <!-- normalize.css v8.0.1 (hosted via Cloudflare's CDN) | MIT License | github.com/necolas/normalize.css -->
+    <link rel = "stylesheet" type = "text/css"
+          href = "https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css"/>
+
+    <link href = "{{ url_for('static', filename='style.css') }}" rel = "stylesheet" type = "text/css">
+
+    <!-- TODO: actually write the description out -->
+    <meta name = "description" content = "A Maori Dictionary">
+</head>
+
+<!-- TODO: rejig everything from here onwards -->
+<body>
+<div id = "container">
+
+    <header>
+        <h1>{% block heading %}{% endblock %}</h1>
+    </header>
+
+    <nav>
+        <input type = "checkbox" name = "drop_down_menu"/>
+        <span></span>
+        <span></span>
+        <span></span>
+        <ul>
+            <li><a href = "/">Home</a></li>
+
+        </ul>
+    </nav>
+
+    <main>
+        {% block main %}
+        {% endblock %}
+    </main>
+
+
+    <footer>
+        <p>
+            &copy; 2023 Aaron Lowe</p>
+    </footer>
+
+</div>
+</body>
+
+</html>
