@@ -24,7 +24,7 @@ A repo for the project combining achievement in AS91906 &amp; AS91902
 * [ ] Showing the use of multiple tables (relational)
 * [ ] Showing use of tools and techniques \(tools can just be deps and IDE, and I don't really know for techniques but this can be re\-looked at later \- I believe the evidence will present itself as the project develops\)
 * [ ] Comments/documentation \(docstrings, schema if appropriate, etc.\)
-  * [ ] Schema \(the native DBMS one can be used but only to complement a provided database structure design\) + data dictionary *\(a good idea is to use a Mermaid diagram so it's visualisable\)*
+  * [ ] Schema \(with iterative improvement somehow?\) \(the native DBMS one can be used but only to complement a provided database structure design\) + data dictionary *\(a good idea is to use a Mermaid diagram so it's visualisable\)* 
 * [ ] Testing \(see iterative improvement proof\)
 * [ ] Following conventions of language
 * [ ] "Complex techniques" \(as defined by the AS91906 spec\)
@@ -32,9 +32,12 @@ A repo for the project combining achievement in AS91906 &amp; AS91902
 * [ ] Store images in base64 in the database
 * [ ] For teacher emails use a regex to check if it's a valid teacher email and also filter domain
 * [ ] Prior to submitting the internal, pin all versions of dependencies in `requirements.txt`.
+* [ ] Use a TOML file for strings and refer to strings in the code using the TOML file instead of hardcoding them into the program \(use tomllib for parsing\).
+* [x] Use Sentry for error reporting and finding errors during testing between each commit. 
+* [ ] Create a linter workflow and a unit test \(perhaps fuzz program too\) to run on each push to the repo
 
 ##### General to\-do
-* [ ] Finish repo config \(pull off of AS91896 and AS91892 config files\) - merging of the repo-setup/init branch is not contingent on this
+* [x] Finish repo config \(pull off of AS91896 and AS91892 config files\) - merging of the repo-setup/init branch is not contingent on this
 * [x] Add .gitignore
 
 ##### Notes
