@@ -65,31 +65,85 @@ class DatabaseError(Exception):
     """
     Custom exception for database errors.
     """
-    pass
+    def __init__(self, message: str) -> None:
+        """
+        Initialization logic for DatabaseError object
+        :param message:
+        """
+        self.message = message
+
 
 
 class Auditable(object):
     """
     Object containing information for an auditable event
     """
-    pass
+    def __init__(self, user: str, action: str, timestamp: str, data: str) -> None:
+        """
+        Initialization logic for Auditable object
+        :param user:
+        :param action:
+        :param timestamp:
+        :param data:
+        """
+        self.user = user
+        self.action = action
+        self.timestamp = timestamp
+        self.data = data
 
-
-class User(object):
-    """
-    Object containing information for a user
-    """
-    pass
+    def __str__(self) -> str:
+        """
+        String representation of Auditable object
+        :return:
+        """
+        return f"{self.user} {self.action} {self.timestamp} {self.data}"
 
 
 class Role(object):
     """
     Object containing information for a role
+    TODO: Decide if I want to do this as objects or write logic in each instance a role/permission is used
     """
-    pass
+    def __init__(self, name: str, permissions: list) -> None:
+        """
+        Initialization logic for Role object
+        :param name:
+        :param permissions:
+        """
+        self.name = name
+        self.permissions = permissions
+
+class User(object):
+    """
+    Object containing information for a user
+    """
+    def __init__(self, username: str, password: str, role: Role) -> None:
+        """
+        Initialization logic for User object
+        :param username:
+        :param password:
+        :param role:
+        """
+        self.username = username
+        self.password = password
+        self.role = role
+
+
 
 class Data(object):
     """
     Base class for all data objects (if they are to be pickled/serialised and stored as blob)
     """
-    pass
+    def __init__(self, data: dict) -> None:
+        """
+        Initialization logic for Data object
+        :param data:
+        """
+        self.data = data
+
+    def __str__(self) -> str:
+        """
+        String representation of Data object
+        :return:
+        """
+        return str(self.data)
