@@ -47,4 +47,5 @@ A repo for the project combining achievement in AS91906 &amp; AS91902
 * [ ] Perhaps make this project rely on queries for reusability \(make a super simple API and just make the webpages send requests to the API, instead of making the webpage routes contain the code to run if that makes sense\)
 * [ ] GitHub Projects may be a good way to organise what I have to do
 * [ ] For the audit log part of the program (see Google Sheets as that is the layout), create a table which has an `id` field and a field which is of `blob` type, and whenever an auditable action takes place, store the relevant information in an object which gets serialised and stored in that blob field, and in the main table, for the `auditableActivities` field, if a word is updated/created (as in, if the auditable activity is related to a word), update the row to refer to the audit log table (so create the audit log row first, and update the `auditableActivities` field to refer to that audit log row.
+* [ ] Instead of using roles, perhaps have a user flag for if they're a teacher (or if omitted, a student)
 * [ ] \-
