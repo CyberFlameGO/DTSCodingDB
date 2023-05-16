@@ -1,5 +1,5 @@
 import sentry_sdk
-from flask import Flask
+import flask
 from sentry_sdk.integrations.flask import FlaskIntegration
 import utils
 
@@ -15,18 +15,20 @@ sentry_sdk.init(
     }
 )
 
-app = Flask(__name__)
-db = utils.Database()
+app = flask.Flask(__name__)
+
+
+# db = utils.Database()
 
 
 @app.route('/')
 def hello_world():  # put application's code here
     """
-    Displays a simple message to the user.
+    Displays the homepage to the user
     :return:
     :rtype:
     """
-    return 'Hello World!'
+    return flask.render_template('home.html')
 
 
 if __name__ == '__main__':

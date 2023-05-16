@@ -65,6 +65,7 @@ class DatabaseError(Exception):
     """
     Custom exception for database errors.
     """
+
     def __init__(self, message: str) -> None:
         """
         Initialization logic for DatabaseError object
@@ -73,11 +74,11 @@ class DatabaseError(Exception):
         self.message = message
 
 
-
 class Auditable(object):
     """
     Object containing information for an auditable event
     """
+
     def __init__(self, user: str, action: str, timestamp: str, data: str) -> None:
         """
         Initialization logic for Auditable object
@@ -104,6 +105,7 @@ class Role(object):
     Object containing information for a role
     TODO: Decide if I want to do this as objects or write logic in each instance a role/permission is used
     """
+
     def __init__(self, name: str, permissions: list) -> None:
         """
         Initialization logic for Role object
@@ -113,10 +115,12 @@ class Role(object):
         self.name = name
         self.permissions = permissions
 
+
 class User(object):
     """
     Object containing information for a user
     """
+
     def __init__(self, username: str, password: str, role: Role) -> None:
         """
         Initialization logic for User object
@@ -129,11 +133,11 @@ class User(object):
         self.role = role
 
 
-
 class Data(object):
     """
     Base class for all data objects (if they are to be pickled/serialised and stored as blob)
     """
+
     def __init__(self, data: dict) -> None:
         """
         Initialization logic for Data object

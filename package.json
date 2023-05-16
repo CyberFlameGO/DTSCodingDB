@@ -1,0 +1,23 @@
+{
+  "name": "dtscodingdb",
+  "version": "1.0.0",
+  "description": "A repo for the project combining achievement in AS91906 &amp; AS91902",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CyberFlameGO/DTSCodingDB.git"
+  },
+  "author": "CyberFlameGO (Aaron Lowe)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CyberFlameGO/DTSCodingDB/issues"
+  },
+  "homepage": "https://github.com/CyberFlameGO/DTSCodingDB#readme",
+  "devDependencies": {
+    "stylelint": "^15.6.1",
+    "stylelint-config-standard": "^33.0.0"
+  }
+}
