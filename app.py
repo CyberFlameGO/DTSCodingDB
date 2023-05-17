@@ -18,7 +18,7 @@ sentry_sdk.init(
 app = flask.Flask(__name__)
 
 
-# db = utils.Database()
+# db = utils.Database() TODO: setup database tables and re-jig the spreadsheet layout
 
 
 @app.route('/')
