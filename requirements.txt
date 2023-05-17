@@ -8,4 +8,4 @@ watchdog == 3.0.0
 python-dotenv == 1.0.0
 
 coverage == 7.2.5
-sentry-sdk[flask] ==1.23.0
+sentry-sdk[flask] ==1.23.1
