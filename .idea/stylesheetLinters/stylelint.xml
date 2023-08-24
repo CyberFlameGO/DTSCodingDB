@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="StylelintConfiguration">
+    <config-file value="/usr/local/lib/node_modules/stylelint-config-standard" />
+  </component>
+</project>

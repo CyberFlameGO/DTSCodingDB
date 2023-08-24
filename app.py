@@ -1,5 +1,8 @@
-import fastapi
 import sentry_sdk
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 import utils
 
@@ -12,17 +15,60 @@ sentry_sdk.init(
     },
 )
 
-app = fastapi.FastAPI()
-
+templates = Jinja2Templates(directory="templates")
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # db = utils.Database() TODO: setup database tables and re-jig the spreadsheet layout
 
 
-@app.get("/")
-async def hello_world():  # put application's code here
+# TODO: adapt the following:
+"""
+@app.on_event("startup")
+async def startup():
+    await database.connect()
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    await database.disconnect()
+"""
+
+
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request):
     """
-    Displays the homepage to the user
+    Home page
+    :param request:
     :return:
-    :rtype:
     """
-    return flask.render_template("home.html")
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+        },
+    )
+
+
+@app.get("/leaderboard", response_class=HTMLResponse)
+async def leaderboard(request: Request):
+    """
+    Leaderboard page
+    :param request:
+    :return:
+    """
+    return templates.TemplateResponse(
+        "leaderboard.html",
+        {"request": request, "users": utils.get_users()},
+    )
+
+
+@app.get("/matches/{id}", response_class=HTMLResponse)
+async def get_match(request: Request, match_id: str):
+    """
+
+    :param request:
+    :param match_id:
+    :return:
+    """
+    return templates.TemplateResponse("matches.html", {"request": request, "id": match_id})
