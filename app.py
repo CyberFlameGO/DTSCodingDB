@@ -19,8 +19,14 @@ templates = Jinja2Templates(directory="templates")
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# db = utils.Database() TODO: setup database tables and re-jig the spreadsheet layout
-
+# TESTING BEGIN
+db = utils.Database("data.db")  # TODO: setup database tables and re-jig the spreadsheet layout
+db.connect()
+print("d")
+# TODO: Check out https://github.com/rhoboro/async-fastapi-sqlalchemy as well as
+#  https://stackoverflow.com/questions/16284537/creating-sqlite-database-if-it-doesnt-exist and
+#  https://github.com/enducube/segi/blob/master/app/models.py
+# TESTING END
 
 # TODO: adapt the following:
 """

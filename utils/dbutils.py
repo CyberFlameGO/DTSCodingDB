@@ -1,7 +1,9 @@
 """
 Database utilities
 """
+from typing import AsyncIterator
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 
@@ -18,7 +20,7 @@ class Database(object):
         :param db_name:
         TODO: use aiosqlite3
         """
-        self.Session = None
+        self.LocalSession = None
         self.engine = create_async_engine(f"sqlite+aiosqlite:///{db_name}")
 
     def connect(self):
@@ -26,14 +28,20 @@ class Database(object):
         Initializes the database connection - creates an SQLAlchemy session
         :return:
         """
-        self.Session = async_sessionmaker(self.engine)
+        self.LocalSession = async_sessionmaker(self.engine)
 
     def close(self):
         """
         Closes the database connection
         :return:
         """
-        self.Session.close()
+        self.LocalSession.close()
+
+    def get_session(self) -> AsyncIterator[async_sessionmaker]:
+        try:
+            yield self.LocalSession()
+        except SQLAlchemyError as e:
+            raise DatabaseError(f"Error getting session: {e}")
 
     def read_db(self, query, params: tuple = (None,)) -> tuple:
         """
