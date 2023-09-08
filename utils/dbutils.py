@@ -1,11 +1,13 @@
 """
 Database utilities
 """
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
+from typing import Optional
 
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+
+from models import Base
 
 
 class Database(object):
@@ -16,30 +18,31 @@ class Database(object):
 
     def __init__(self, db_name: str):
         """
-        Database initialization logic
+        Database initialization - call connect() to connect to the database
         :param db_name:
         TODO: use aiosqlite3
         """
-        self.LocalSession = None
-        self.engine = create_async_engine(f"sqlite+aiosqlite:///{db_name}")
+        self._db_name: str = db_name
+        self.engine: Optional[AsyncEngine] = None
+        self.LocalSession: Optional[async_sessionmaker] = None
 
-    def connect(self):
+    async def connect(self):
         """
-        Initializes the database connection - creates an SQLAlchemy session
+        Initializes the database connection - creates sessionmaker and engine
         :return:
         """
-        self.LocalSession = async_sessionmaker(self.engine)
+        self.engine: AsyncEngine = create_async_engine(f"sqlite+aiosqlite:///{self._db_name}")
+        self.LocalSession: async_sessionmaker = async_sessionmaker(self.engine)
+        async with self.engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
 
-    def close(self):
+    async def get_session(self) -> AsyncIterator[AsyncSession]:
         """
-        Closes the database connection
-        :return:
+        Gets a session
         """
-        self.LocalSession.close()
-
-    def get_session(self) -> AsyncIterator[async_sessionmaker]:
         try:
-            yield self.LocalSession()
+            async with self.LocalSession() as session:
+                yield session
         except SQLAlchemyError as e:
             raise DatabaseError(f"Error getting session: {e}")
 
@@ -86,7 +89,3 @@ class DatabaseError(Exception):
 
 
 engine = create_async_engine("sqlite+aiosqlite:///filename")
-
-
-class Base(AsyncAttrs, DeclarativeBase):
-    pass
