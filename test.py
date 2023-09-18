@@ -11,7 +11,7 @@ async def main():
     await db.connect()
     print("d")
     async for session in db.get_session():
-        session.add(Games(id=6))
+        session.add(Game(id=6, name="penis", description="Penis"))
         await session.commit()
         print("dd")
 

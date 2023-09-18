@@ -2,7 +2,7 @@
 Base class
 """
 from datetime import datetime
-from typing import FrozenSet
+from typing import FrozenSet, Set
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy.ext.asyncio import AsyncAttrs
@@ -17,7 +17,7 @@ class Base(AsyncAttrs, DeclarativeBase):
     __abstract__: bool = True
 
 
-class Games(Base):
+class Game(Base):
     __tablename__: str = "games"
 
     id: Mapped[int] = mapped_column(autoincrement=True, nullable=False, unique=True, primary_key=True)
@@ -25,7 +25,7 @@ class Games(Base):
     description: Mapped[str] = mapped_column()
 
 
-class Users(Base):
+class User(Base):
     __tablename__: str = "users"
 
     id: Mapped[int] = mapped_column(autoincrement=True, nullable=False, unique=True, primary_key=True)
@@ -37,19 +37,18 @@ class Users(Base):
     last_name: Mapped[str] = mapped_column()
     games_played: Mapped[int] = mapped_column()
     games_won: Mapped[int] = mapped_column()
-    created_at: Mapped[DateTime] = mapped_column(default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
 
 
-class Matches(Base):
+class Match(Base):
     __tablename__: str = "matches"
 
     id: Mapped[int] = mapped_column(autoincrement=True, nullable=False, unique=True, primary_key=True)
     game_type: Mapped[str] = mapped_column()
-    played_at: Mapped[DateTime] = mapped_column(default=datetime.utcnow)
+    played_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
     creator: Mapped[str] = mapped_column()
-    created_at: Mapped[DateTime] = mapped_column(default=datetime.utcnow)
-    players: Mapped[FrozenSet["MatchPlayers"]] = relationship(back_populates="matches")
-    results: Mapped[FrozenSet["MatchResult"]] = relationship(back_populates="matches")
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    players: Mapped[Set["MatchPlayers"]] = relationship(back_populates="match")
 
 
 class MatchPlayers(Base):
@@ -57,6 +56,7 @@ class MatchPlayers(Base):
 
     id: Mapped[int] = mapped_column(autoincrement=True, nullable=False, unique=True, primary_key=True)
     match_id: Mapped[int] = mapped_column(ForeignKey("matches.id"))
+    match: Mapped["Match"] = relationship(back_populates="players")
     player_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
 

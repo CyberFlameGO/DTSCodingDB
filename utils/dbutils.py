@@ -35,6 +35,7 @@ class Database(object):
         self.LocalSession: async_sessionmaker = async_sessionmaker(self.engine)
         async with self.engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+            # await conn.run_sync(Base.metadata.reflect)
 
     async def get_session(self) -> AsyncIterator[AsyncSession]:
         """
@@ -86,6 +87,3 @@ class DatabaseError(Exception):
         :param message:
         """
         self.message = message
-
-
-engine = create_async_engine("sqlite+aiosqlite:///filename")
