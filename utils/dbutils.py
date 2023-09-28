@@ -25,6 +25,7 @@ class Database(object):
         self._db_name: str = db_name
         self.engine: Optional[AsyncEngine] = None
         self.LocalSession: Optional[async_sessionmaker] = None
+        # self.sessions: List = []
 
     async def connect(self):
         """
@@ -43,37 +44,15 @@ class Database(object):
         """
         try:
             async with self.LocalSession() as session:
+                # self.sessions.append(session)
                 yield session
         except SQLAlchemyError as e:
             raise DatabaseError(f"Error getting session: {e}")
 
-    def read_db(self, query, params: tuple = (None,)) -> tuple:
-        """
-        Runs a query then fetches and returns output of the query.
-        :param query:
-        :param params:
-        :return:
-        """
-        if params[0] is None and len(params) == 1:
-            self.cursor.execute(query)
-        else:
-            self.cursor.execute(query, params)
-        return tuple(self.cursor.fetchall())
-
-    def get_all_fields_of_table(self, table) -> tuple:
-        """
-        Gets all columns (fields) excluding the id field, of a table using SQLite's PRAGMA command.
-        Having this as a Python is more convenient than having it as a sqlite3 function
-        :param table:
-        :return:
-        """
-        self.cursor.execute(f"PRAGMA table_info({table});")
-        row_info = self.cursor.fetchall()
-        del row_info[0]
-        data = []
-        for val in row_info:
-            data.append(val[1])
-        return tuple(data)
+    # async def disconnect(self):
+    #     for session in self.sessions:
+    #         if session.is_active():
+    #             await session.close()
 
 
 class DatabaseError(Exception):

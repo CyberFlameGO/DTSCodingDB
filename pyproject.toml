@@ -1,20 +1,25 @@
-[tool.poetry]
+[tool.black]
+line-length = 120
+
+[tool.pdm.build]
+includes = []
+[project]
 name = "dtscodingdb"
 version = "0.1.0"
 description = ""
-authors = ["CyberFlame <cyberflameu@gmail.com>"]
+authors = [
+    { name = "CyberFlame", email = "cyberflameu@gmail.com" },
+]
+dependencies = [
+    "fastapi[all]<1.0.0,>=0.103.0",
+    "sentry-sdk[fastapi]<2.0.0,>=1.30.0",
+    "sqlalchemy[aiosqlite]<3.0.0,>=2.0.20",
+]
+requires-python = ">=3.11,<4.0"
 readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.11"
-fastapi = { extras = ["all"], version = "^0.103.0" }
-sentry-sdk = { extras = ["fastapi"], version = "^1.30.0" }
-sqlalchemy = { extras = ["aiosqlite"], version = "^2.0.20" }
+license = { text = "MIT" }
 
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.black]
-line-length = 120
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"

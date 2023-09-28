@@ -23,7 +23,8 @@ db = utils.Database("data.db")  # TODO: setup database tables and re-jig the spr
 
 
 # TODO: adapt the following:
-"""
+
+
 @app.on_event("startup")
 async def startup():
     await database.connect()
@@ -32,7 +33,7 @@ async def startup():
 @app.on_event("shutdown")
 async def shutdown():
     await database.disconnect()
-"""
+    del db
 
 
 @app.get("/", response_class=HTMLResponse)
