@@ -1,10 +1,10 @@
 """
 Database utilities
 """
-from collections.abc import AsyncIterator
 from typing import Optional
+from collections.abc import AsyncGenerator
 
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from models import Base
@@ -38,9 +38,11 @@ class Database(object):
             await conn.run_sync(Base.metadata.create_all)
             # await conn.run_sync(Base.metadata.reflect)
 
-    async def get_session(self) -> AsyncIterator[AsyncSession]:
+    async def get_session(self) -> AsyncGenerator[AsyncSession, None]:
         """
         Gets a session
+        TODO: see https://fastapi.tiangolo.com/tutorial/dependencies/dependencies-with-yield/
+         and https://fastapi.tiangolo.com/tutorial/dependencies/#what-is-dependency-injection
         """
         try:
             async with self.LocalSession() as session:
@@ -48,11 +50,30 @@ class Database(object):
                 yield session
         except SQLAlchemyError as e:
             raise DatabaseError(f"Error getting session: {e}")
+        finally:
+            await session.close()
 
     # async def disconnect(self):
     #     for session in self.sessions:
     #         if session.is_active():
     #             await session.close()
+
+    @staticmethod
+    async def insert(session: AsyncSession, model: Base):
+        """
+        Inserts a model into the database
+        :param session:
+        :param model:
+        :return:
+        """
+        try:
+            session.add(model)
+            await session.commit()
+            return
+        except IntegrityError as e:
+            raise DatabaseError(f"IntegrityError encountered whilst executing: {e}")
+        except SQLAlchemyError as e:
+            raise DatabaseError(f"SQLAlchemyError encountered whilst executing: {e}")
 
 
 class DatabaseError(Exception):

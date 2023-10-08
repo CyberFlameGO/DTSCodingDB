@@ -10,8 +10,11 @@ async def main():
     db = Database("data.db")
     await db.connect()
     print("d")
+    print(type(db.get_session()))
     async for session in db.get_session():
-        session.add(Game(id=6, name="penis", description="Penis"))
+        print(type(session))
+        return
+        session.add(Game(id=6, name="test", description="Tennis"))
         await session.commit()
         print("dd")
 

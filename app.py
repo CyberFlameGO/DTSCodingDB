@@ -1,10 +1,14 @@
+from typing import Annotated, AsyncGenerator, AsyncIterable, AsyncIterator
+
 import sentry_sdk
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.ext.asyncio import AsyncSession
 
 import utils
+from utils import Database
 
 sentry_sdk.init(
     dsn="https://eebca21dd9c9418cbfe83e7b8a0976de@o317122.ingest.sentry.io/4504873492480000",
@@ -20,20 +24,19 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 db = utils.Database("data.db")  # TODO: setup database tables and re-jig the spreadsheet layout
-
+session = Annotated[AsyncGenerator, Depends(db.get_session)]
 
 # TODO: adapt the following:
 
 
 @app.on_event("startup")
 async def startup():
-    await database.connect()
+    await db.connect()
 
 
 @app.on_event("shutdown")
 async def shutdown():
-    await database.disconnect()
-    del db
+    pass
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -65,7 +68,7 @@ async def leaderboard(request: Request):
 
 
 @app.get("/matches/{id}", response_class=HTMLResponse)
-async def get_match(request: Request, match_id: str):
+async def get_match(request: Request, match_id: str, session):
     """
 
     :param request:

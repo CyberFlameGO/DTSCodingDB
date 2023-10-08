@@ -5,7 +5,7 @@
     <option name="enabledOnSave" value="true" />
     <option name="executionMode" value="BINARY" />
     <option name="pathToExecutable" value="$USER_HOME$/.local/pipx/venvs/black/bin/black" />
-    <option name="sdkUUID" value="1e4ee7d3-e697-4e08-8ea0-dd44972d1773" />
+    <option name="sdkName" value="Python 3.11 (DTSCodingDB)" />
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.11 (DTSCodingDB)" project-jdk-type="Python SDK" />
   <component name="PythonCompatibilityInspectionAdvertiser">
