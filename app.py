@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import models
 import utils
 from utils import Database
 
@@ -24,7 +25,7 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 db = utils.Database("data.db")  # TODO: setup database tables and re-jig the spreadsheet layout
-session = Annotated[AsyncGenerator, Depends(db.get_session)]
+Session = Annotated[AsyncSession, Depends(db.get_session)]
 
 # TODO: adapt the following:
 
@@ -68,11 +69,12 @@ async def leaderboard(request: Request):
 
 
 @app.get("/matches/{id}", response_class=HTMLResponse)
-async def get_match(request: Request, match_id: str, session):
+async def get_match(request: Request, match_id: int, session: Session):
     """
-
+    :param session:
     :param request:
     :param match_id:
     :return:
     """
-    return templates.TemplateResponse("matches.html", {"request": request, "id": match_id})
+    match = await db.retrieve(session, models.Match, match_id)
+    return templates.TemplateResponse("matches.html", {"request": request, "id": match_id, "match": match})

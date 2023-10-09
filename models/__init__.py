@@ -39,6 +39,8 @@ class User(Base):
     games_won: Mapped[int] = mapped_column()
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
 
+    matches: Mapped[] = relationship("Match", secondary="matchplayers", backref="players")
+
 
 class Match(Base):
     __tablename__: str = "matches"
@@ -49,6 +51,7 @@ class Match(Base):
     creator: Mapped[str] = mapped_column()
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
     players: Mapped[Set["MatchPlayers"]] = relationship(back_populates="match")
+    results: Mapped[Set["MatchResult"]] = relationship(back_populates="match")
 
 
 class MatchPlayers(Base):
@@ -56,7 +59,6 @@ class MatchPlayers(Base):
 
     id: Mapped[int] = mapped_column(autoincrement=True, nullable=False, unique=True, primary_key=True)
     match_id: Mapped[int] = mapped_column(ForeignKey("matches.id"))
-    match: Mapped["Match"] = relationship(back_populates="players")
     player_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
 
@@ -65,5 +67,6 @@ class MatchResult(Base):
 
     id: Mapped[int] = mapped_column(autoincrement=True, nullable=False, unique=True, primary_key=True)
     match_id: Mapped[int] = mapped_column(ForeignKey("matches.id"))
+    match: Mapped["Match"] = relationship(back_populates="results")
     won: Mapped[str] = mapped_column()
     lost: Mapped[str] = mapped_column()

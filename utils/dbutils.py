@@ -1,7 +1,7 @@
 """
 Database utilities
 """
-from typing import Optional
+from typing import Optional, Type
 from collections.abc import AsyncGenerator
 
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -72,6 +72,20 @@ class Database(object):
             return
         except IntegrityError as e:
             raise DatabaseError(f"IntegrityError encountered whilst executing: {e}")
+        except SQLAlchemyError as e:
+            raise DatabaseError(f"SQLAlchemyError encountered whilst executing: {e}")
+
+    @staticmethod
+    async def retrieve(session: AsyncSession, model: Type[Base], identifier: int) -> Optional[Base]:
+        """
+        Retrieves a model from the database TODO: adjust return type
+        :param identifier:
+        :param session:
+        :param model:
+        :return:
+        """
+        try:
+            return await session.get(model, identifier)
         except SQLAlchemyError as e:
             raise DatabaseError(f"SQLAlchemyError encountered whilst executing: {e}")
 
