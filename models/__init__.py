@@ -21,6 +21,7 @@ class Game(Base):
     __tablename__: str = "games"
 
     id: Mapped[int] = mapped_column(autoincrement=True, nullable=False, unique=True, primary_key=True)
+    match: Mapped[Set["Match"]] = relationship()
     name: Mapped[str] = mapped_column()
     description: Mapped[str] = mapped_column()
 
@@ -35,30 +36,32 @@ class User(Base):
     role: Mapped[str] = mapped_column(nullable=False)
     first_name: Mapped[str] = mapped_column()
     last_name: Mapped[str] = mapped_column()
-    games_played: Mapped[int] = mapped_column()
-    games_won: Mapped[int] = mapped_column()
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
 
-    matches: Mapped[] = relationship("Match", secondary="matchplayers", backref="players")
+    creator: Mapped[Set["Match"]] = relationship()
+    player: Mapped[Set["MatchPlayers"]] = relationship(back_populates="player")
 
 
 class Match(Base):
     __tablename__: str = "matches"
 
     id: Mapped[int] = mapped_column(autoincrement=True, nullable=False, unique=True, primary_key=True)
-    game_type: Mapped[str] = mapped_column()
+    game_id: Mapped[int] = mapped_column(ForeignKey("games.id"))
     played_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
-    creator: Mapped[str] = mapped_column()
+
+    creator_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
-    players: Mapped[Set["MatchPlayers"]] = relationship(back_populates="match")
-    results: Mapped[Set["MatchResult"]] = relationship(back_populates="match")
+    players: Mapped[Set["MatchPlayers"]] = relationship()
+    results: Mapped["MatchResult"] = relationship(back_populates="match")
 
 
 class MatchPlayers(Base):
     __tablename__: str = "matchplayers"
 
     id: Mapped[int] = mapped_column(autoincrement=True, nullable=False, unique=True, primary_key=True)
+
     match_id: Mapped[int] = mapped_column(ForeignKey("matches.id"))
+    player: Mapped["User"] = relationship(back_populates="player")
     player_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
 
@@ -66,7 +69,10 @@ class MatchResult(Base):
     __tablename__: str = "matchresults"
 
     id: Mapped[int] = mapped_column(autoincrement=True, nullable=False, unique=True, primary_key=True)
-    match_id: Mapped[int] = mapped_column(ForeignKey("matches.id"))
     match: Mapped["Match"] = relationship(back_populates="results")
-    won: Mapped[str] = mapped_column()
-    lost: Mapped[str] = mapped_column()
+    match_id: Mapped[int] = mapped_column(ForeignKey("matches.id"))
+
+    won_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    lost_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    won: Mapped["User"] = relationship("User", foreign_keys=[won_id])
+    lost: Mapped["User"] = relationship("User", foreign_keys=[lost_id])
