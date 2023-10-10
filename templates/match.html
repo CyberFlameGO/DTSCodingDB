@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h1>Match information for #{{ match }}</h1>
+    <ul>
+        <li>Match ID: {{ match.id }}</li>
+        <li>Players: {{ match.players }}</li>
+        <li>Winner: {{ match.winner }}</li>
+        <li>: {{ match.start_time }}</li>
+    </ul>
+{% endblock %}
