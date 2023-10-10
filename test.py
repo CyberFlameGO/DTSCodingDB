@@ -42,11 +42,12 @@ async def main():
             Match(
                 game_id=1,
                 creator_id=1,
-                players={MatchPlayers(player=1), MatchPlayers(player=1)},
-                results=MatchResult(won=1, lost=2),
+                players={MatchPlayers(player_id=1), MatchPlayers(player_id=2)},
+                results=MatchResult(won_id=1, lost_id=2),
             )
         )
         await session.commit()
+        print("done")
 
 
 if __name__ == "__main__":

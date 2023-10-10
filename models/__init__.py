@@ -46,12 +46,12 @@ class Match(Base):
     __tablename__: str = "matches"
 
     id: Mapped[int] = mapped_column(autoincrement=True, nullable=False, unique=True, primary_key=True)
-    game_id: Mapped[int] = mapped_column(ForeignKey("games.id"))
+    game_id: Mapped[int] = mapped_column(ForeignKey("games.id"), nullable=False)
     played_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
 
     creator_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
-    players: Mapped[Set["MatchPlayers"]] = relationship()
+    players: Mapped[Set["MatchPlayers"]] = relationship(back_populates="match")
     results: Mapped["MatchResult"] = relationship(back_populates="match")
 
 
@@ -60,9 +60,10 @@ class MatchPlayers(Base):
 
     id: Mapped[int] = mapped_column(autoincrement=True, nullable=False, unique=True, primary_key=True)
 
-    match_id: Mapped[int] = mapped_column(ForeignKey("matches.id"))
+    match: Mapped["Match"] = relationship(back_populates="players")
+    match_id: Mapped[int] = mapped_column(ForeignKey("matches.id"), nullable=False)
     player: Mapped["User"] = relationship(back_populates="player")
-    player_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    player_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
 
 
 class MatchResult(Base):
@@ -70,9 +71,9 @@ class MatchResult(Base):
 
     id: Mapped[int] = mapped_column(autoincrement=True, nullable=False, unique=True, primary_key=True)
     match: Mapped["Match"] = relationship(back_populates="results")
-    match_id: Mapped[int] = mapped_column(ForeignKey("matches.id"))
+    match_id: Mapped[int] = mapped_column(ForeignKey("matches.id"), unique=True, nullable=False)
 
-    won_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    lost_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    won_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    lost_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
     won: Mapped["User"] = relationship("User", foreign_keys=[won_id])
     lost: Mapped["User"] = relationship("User", foreign_keys=[lost_id])
