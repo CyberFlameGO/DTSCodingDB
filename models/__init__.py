@@ -15,12 +15,12 @@ class Base(AsyncAttrs, DeclarativeBase):
     """
 
     __abstract__: bool = True
+    id: Mapped[int] = mapped_column(autoincrement=True, nullable=False, unique=True, primary_key=True)
 
 
 class Game(Base):
     __tablename__: str = "games"
 
-    id: Mapped[int] = mapped_column(autoincrement=True, nullable=False, unique=True, primary_key=True)
     match: Mapped[Set["Match"]] = relationship()
     name: Mapped[str] = mapped_column()
     description: Mapped[str] = mapped_column()
@@ -29,7 +29,6 @@ class Game(Base):
 class User(Base):
     __tablename__: str = "users"
 
-    id: Mapped[int] = mapped_column(autoincrement=True, nullable=False, unique=True, primary_key=True)
     email: Mapped[str] = mapped_column(unique=True, nullable=False)
     username: Mapped[str] = mapped_column(unique=True, nullable=False)
     password: Mapped[str] = mapped_column(unique=True, nullable=False)
@@ -45,7 +44,6 @@ class User(Base):
 class Match(Base):
     __tablename__: str = "matches"
 
-    id: Mapped[int] = mapped_column(autoincrement=True, nullable=False, unique=True, primary_key=True)
     game_id: Mapped[int] = mapped_column(ForeignKey("games.id"), nullable=False)
     played_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
 
@@ -58,8 +56,6 @@ class Match(Base):
 class MatchPlayers(Base):
     __tablename__: str = "matchplayers"
 
-    id: Mapped[int] = mapped_column(autoincrement=True, nullable=False, unique=True, primary_key=True)
-
     match: Mapped["Match"] = relationship(back_populates="players")
     match_id: Mapped[int] = mapped_column(ForeignKey("matches.id"), nullable=False)
     player: Mapped["User"] = relationship(back_populates="player")
@@ -69,7 +65,6 @@ class MatchPlayers(Base):
 class MatchResult(Base):
     __tablename__: str = "matchresults"
 
-    id: Mapped[int] = mapped_column(autoincrement=True, nullable=False, unique=True, primary_key=True)
     match: Mapped["Match"] = relationship(back_populates="results")
     match_id: Mapped[int] = mapped_column(ForeignKey("matches.id"), unique=True, nullable=False)
 

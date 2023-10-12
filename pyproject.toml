@@ -11,11 +11,11 @@ authors = [
     { name = "CyberFlame", email = "cyberflameu@gmail.com" },
 ]
 dependencies = [
-    "fastapi[all]<1.0.0,>=0.103.0",
-    "sentry-sdk[fastapi]<2.0.0,>=1.30.0",
-    "sqlalchemy[aiosqlite]<3.0.0,>=2.0.20",
+    "fastapi[all]>=0.103.0",
+    "sentry-sdk[fastapi]>=1.30.0",
+    "sqlalchemy[aiosqlite]>=2.0.20",
 ]
-requires-python = ">=3.11,<4.0"
+requires-python = ">=3.11"
 readme = "README.md"
 license = { text = "MIT" }
 

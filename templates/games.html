@@ -1,10 +1,83 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block head %}
+    <script type = "module">
+        import ResourceManager from '../static/js/utils.js';
+
+        let editedGameId = null;
+
+        window.editGame = async function editGame(id) {
+            if (id) {
+                editedGameId = id;
+
+                // Make the edit form visible
+
+                document.getElementById('edit_form' + id).style.display = 'inline';
+            }
+        };
+
+        window.submitChanges = async function submitChanges(id) {
+            const field = document.getElementById('selector' + id).value;
+            const value = document.getElementById('edit' + id).value;
+            let updatedGame = {};
+
+            if (field === 'Name') {
+                updatedGame.name = value;
+            } else if (field === 'Description') {
+                updatedGame.description = value;
+            }
+
+            await ResourceManager.editResource(id, updatedGame, '/games');
+
+            // Hide edit form after submitting
+
+            document.getElementById('edit_form' + id).style.display = 'none';
+        };
+
+        window.deleteGame = async function (id) {
+            if (confirm('Are you sure?')) {
+                await ResourceManager.deleteResource(id, '/games');
+            }
+        };
+    </script>
+{% endblock %}
+
+{% block content %}
+    <h1>Games</h1>
+    <p>This is a list of current games</p>
+    <ul>
+        {% for game in games %}
+            <li>
+                {{ game.name }}
+                {% if can_mutate_games %}
+                    <button onclick = "editGame({{ game.id }})" type = "button">Edit</button>
+                    <button onclick = "deleteGame({{ game.id }})" type = "button">Delete</button>
+
+                    <!-- Hidden labels, selector, text box and submit button for editing within a span tag -->
+                    <span id = "edit_form{{ game.id }}" style = "display: none;">
+                <label for = "selector{{ game.id }}">Choose field:</label>
+                <select id = "selector{{ game.id }}">
+                    <option value = "Name">Name</option>
+                    <option value = "Description">Description</option>
+                </select>
+
+                <label for = "edit{{ game.id }}">New value:</label>
+                <input type = "text" id = "edit{{ game.id }}"/>
+
+                <button id = "submit{{ game.id }}" onclick = "submitChanges({{ game.id }})">Submit</button>
+            </span>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Add a new game</h2>
+    <form action = "/games" method = "post">
+        <label for = "name">Game Name</label>
+        <input type = "text" id = "name" name = "name" required><br>
+        <label for = "description">Game Description</label>
+        <input type = "text" id = "description" name = "description" required><br>
+        <input type = "submit" value = "Submit">
+    </form>
+
+{% endblock %}
