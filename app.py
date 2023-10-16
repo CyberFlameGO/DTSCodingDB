@@ -117,13 +117,14 @@ async def new_record(request: Request, session: Session, endpoint: str):
     # This code gets the form data from the request
     form = await request.form()
     print(form)
-    match endpoint:  # match-case, not 'match' as in the object
-        case "games":
-            model = models.Game(name=form.get("name"), description=form.get("description"))
+    model, endpoint_type = classify(endpoint)
+    match endpoint_type:
+        case Endpoint.GAMES:
+            model_instance = model(name=form.get("name"), description=form.get("description"))
         case _:
             return Response(status_code=status.HTTP_404_NOT_FOUND)
     try:
-        await db.insert(session, model)
+        await db.insert(session, model_instance)
     except IntegrityError:
         return Response(status_code=status.HTTP_409_CONFLICT)
     return RedirectResponse(f"/{endpoint}", status_code=status.HTTP_303_SEE_OTHER)

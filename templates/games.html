@@ -75,6 +75,7 @@
                 }).then(function (response) {
                     if (!response.ok && response.status === HTTP_409_CONFLICT) {
                         alert('You cannot add a game with a name that already exists in the database!');
+                        // TODO: abstract this into utility class, and handle the response
                     }
                 });
             });

@@ -15,7 +15,6 @@ body {
   grid-template-areas: 'nav header' 'main main' 'footer footer';
 }
 
-
 #container::after { /* todo: review line */
   content: "";
   clear: both;
@@ -29,8 +28,8 @@ img {
 h1, h2, h3, h4 {
   padding: 1rem 0;
   font-family: 'Suez One', serif;
-  color: #000;
-  text-shadow: 2px 2px 4px #fff;
+  color: #000000;
+  text-shadow: 2px 2px 4px #ffffff;
 }
 
 header {
@@ -41,31 +40,14 @@ header {
 
 nav {
   grid-area: nav;
-  background-color: rgb(44 62 80 / 100%); /* darkest blue */
+  background-color: #2c3e50; /* darkest blue */
   text-align: center;
 
   /* color: rgba(52, 152, 219, 1.0);!*light blue*! */
   font-size: 1.5rem;
   padding-top: 0.4rem;
   padding-bottom: 0.7rem;
-  color: rgb(52 152 219 / 100%); /* light blue */
-}
-
-.navbar-brand {
-  display: inline;
-  float: left;
-}
-
-.navbar-links {
-  display: inline;
-  float: right;
-}
-
-a, a:visited {
-  color: rgb(52 152 219 / 100%);
-
-  /* color:hotpink; */
-  text-decoration: none;
+  color: #3498db; /* light blue */
 }
 
 nav a {
@@ -82,30 +64,47 @@ nav a:hover {
   /* color: rgba(44, 62, 80, 1.0); !* darkest blue *! */
 
   /* background-color: rgba(52, 152, 219, 1.0); !*light blue*! */
-  border-bottom: 3px solid rgb(52 152 219 / 100%);
+  border-bottom: 3px solid #3498db;
+}
+
+a, a:visited {
+  color: #3498db;
+
+  /* color:hotpink; */
+  text-decoration: none;
+}
+
+.navbar-brand {
+  display: inline;
+  float: left;
+}
+
+.navbar-links {
+  display: inline;
+  float: right;
 }
 
 main {
   grid-area: main;
   padding: 1rem;
-  background-color: #edd;
+  background-color: #eedddd;
 }
 
 table {
   width: 100%;
-  border: 2px solid #666;
+  border: 2px solid #666666;
   border-collapse: collapse;
 }
 
 th, td {
-  border: 1px solid #888;
+  border: 1px solid #888888;
   padding: 0.2rem;
   text-align: left;
 }
 
 th {
-  background-color: #000;
-  color: #fff;
+  background-color: #000000;
+  color: #ffffff;
 }
 
 img .thumb {
@@ -119,15 +118,14 @@ footer {
 }
 
 footer p {
-  color: #000;
-  text-shadow: 2px 2px 4px #fff;
+  color: #000000;
+  text-shadow: 2px 2px 4px #ffffff;
   font-size: 1.5rem;
 }
 
 footer img {
   float: right;
 }
-
 
 @media only screen and (width <= 768px) {
   nav {
@@ -146,7 +144,7 @@ footer img {
   }
 
   nav a:hover {
-    color: tomato;
+    color: #ff6347;
   }
 
   nav input {
@@ -171,21 +169,21 @@ footer img {
     height: 4px;
     margin-bottom: 5px;
     position: relative;
-    background: #000;
+    background: #000000;
     border-radius: 3px;
     z-index: 1;
     transform-origin: 4px 0;
-    transition: transform 0.5s cubic-bezier(0.77,0.2,0.05,1.0),
-    background 0.5s cubic-bezier(0.77,0.2,0.05,1.0),
+    transition: transform 0.5s cubic-bezier(0.77, 0.2, 0.05, 1.0),
+    background 0.5s cubic-bezier(0.77, 0.2, 0.05, 1.0),
     opacity 0.55s ease;
   }
 
   nav span:first-child {
-    transform-origin: 0% 0%;
+    transform-origin: 0 0;
   }
 
   nav span:nth-last-child(2) {
-    transform-origin: 0% 100%;
+    transform-origin: 0 100%;
   }
 
   /*
@@ -195,7 +193,7 @@ footer img {
   nav input:checked ~ span {
     opacity: 1;
     transform: rotate(45deg) translate(-2px, -1px);
-    background: #000;
+    background: #000000;
   }
 
   /*
@@ -265,13 +263,13 @@ footer img {
   }
 
   nav a {
-    color: #fff;
+    color: #ffffff;
     text-decoration: none;
   }
 
   nav a:hover {
-    color: #000;
-    background-color: #fff;
+    color: #000000;
+    background-color: #ffffff;
   }
 
   nav input, nav span {
