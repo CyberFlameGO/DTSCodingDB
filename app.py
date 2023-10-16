@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Annotated, Type
+from typing import Annotated, Tuple, Type
 
 import sentry_sdk
 from fastapi import Depends, FastAPI, Request, status
@@ -12,6 +12,7 @@ from pydantic import BaseModel
 
 import models
 import utils
+from models import Game
 
 sentry_sdk.init(
     dsn="https://eebca21dd9c9418cbfe83e7b8a0976de@o317122.ingest.sentry.io/4504873492480000",
@@ -39,17 +40,21 @@ class Endpoint(Enum):
     GAMES = "games"
 
 
-def classify(to_classify: Endpoint | str) -> Type[models.Base] | None:
+def classify(to_classify: Endpoint | str) -> tuple[Type[Game], Endpoint] | tuple[None, int]:
     """
     Abstracts endpoint classification away from route function
     :param to_classify:
     :return:
     """
-    match to_classify:
+    try:
+        subject = Endpoint(to_classify)
+    except ValueError:
+        return None, status.HTTP_404_NOT_FOUND
+    match subject:
         case Endpoint.GAMES:
-            return models.Game
+            return models.Game, subject
         case _:
-            return None
+            return None, status.HTTP_404_NOT_FOUND
 
 
 @app.on_event("startup")
@@ -86,15 +91,15 @@ async def records_list(request: Request, session: Session, endpoint: str | Endpo
     :param request:
     :return:
     """
-    model = classify(Endpoint(endpoint))
+    model, endpoint_type = classify(endpoint)
     if model is None:
         return Response(status_code = status.HTTP_404_NOT_FOUND)
 
     return templates.TemplateResponse(
-        "games.html",
+        f"{endpoint_type.value}.html",
         {
             "request": request,
-            "data": await db.dump_all(session, model),
+            endpoint_type.value: await db.dump_all(session, model),
             "can_mutate_games": True,
         },
     )
@@ -138,7 +143,7 @@ async def update_record(request: Request, session: Session, identifier: int, end
     """
     # This code gets the form data from the request
     req_data: dict = await request.json()
-    model = classify(endpoint)
+    model, endpoint_type = classify(endpoint)
     if model is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     try:
@@ -166,7 +171,7 @@ async def delete_game(request: Request, session: Session, identifier: int, endpo
     """
     # This code gets the form data from the request
     form = await request.form()
-    model = classify(endpoint)
+    model, endpoint_type = classify(endpoint)
     print(form)
     await db.remove_record(session, model, identifier)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
