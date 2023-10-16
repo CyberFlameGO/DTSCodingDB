@@ -1,4 +1,5 @@
-from typing import Annotated
+from enum import Enum
+from typing import Annotated, Type
 
 import sentry_sdk
 from fastapi import Depends, FastAPI, Request, status
@@ -7,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel
 
 import models
 import utils
@@ -28,6 +30,26 @@ db = utils.Database("data.db")  # TODO: setup database tables and re-jig the spr
 Session = Annotated[AsyncSession, Depends(db.get_session)]
 
 # TODO: adapt the following:
+
+
+class Endpoint(Enum):
+    """
+    Enum of endpoints
+    """
+    GAMES = "games"
+
+
+def classify(to_classify: Endpoint | str) -> Type[models.Base] | None:
+    """
+    Abstracts endpoint classification away from route function
+    :param to_classify:
+    :return:
+    """
+    match to_classify:
+        case Endpoint.GAMES:
+            return models.Game
+        case _:
+            return None
 
 
 @app.on_event("startup")
@@ -55,29 +77,34 @@ async def home(request: Request):
     )
 
 
-@app.get("/games", response_class=HTMLResponse)
-async def games_list(request: Request, session: Session):
+@app.get("/{endpoint}", response_class=HTMLResponse)
+async def records_list(request: Request, session: Session, endpoint: str | Endpoint):
     """
     Games page
+    :param endpoint:
     :param session:
     :param request:
     :return:
     """
-    games = await db.dump_all(session, models.Game)
+    model = classify(Endpoint(endpoint))
+    if model is None:
+        return Response(status_code = status.HTTP_404_NOT_FOUND)
+
     return templates.TemplateResponse(
         "games.html",
         {
             "request": request,
-            "games": games,
+            "data": await db.dump_all(session, model),
             "can_mutate_games": True,
         },
     )
 
 
-@app.post("/games", response_class=HTMLResponse)
-async def new_game(request: Request, session: Session):
+@app.post("/{endpoint}", response_class=HTMLResponse)
+async def new_record(request: Request, session: Session, endpoint: str):
     """
     New game page
+    :param endpoint:
     :param request:
     :param session:
     :return:
@@ -85,55 +112,63 @@ async def new_game(request: Request, session: Session):
     # This code gets the form data from the request
     form = await request.form()
     print(form)
-    game = models.Game(name=form.get("name"), description=form.get("description"))
+    match endpoint:  # match-case, not 'match' as in the object
+        case "games":
+            model = models.Game(name=form.get("name"), description=form.get("description"))
+        case _:
+            return Response(status_code=status.HTTP_404_NOT_FOUND)
     try:
-        await db.insert(session, game)
+        await db.insert(session, model)
     except IntegrityError:
         return Response(status_code=status.HTTP_409_CONFLICT)
-    return RedirectResponse("/games", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(f"/{endpoint}", status_code=status.HTTP_303_SEE_OTHER)
 
 
-@app.patch("/games/{game_id}", response_class=HTMLResponse)
-async def update_game(request: Request, session: Session, game_id: int):
+@app.patch("/{endpoint}/{identifier}", response_class=HTMLResponse)
+async def update_record(request: Request, session: Session, identifier: int, endpoint: str):
     """
     Update game page
     TODO: Fix - adjust JS and create check to see which field was modified for the row.
     TODO: Utilise has_existed to return 410 Gone if record was deleted and existed, or 404 if it hasn't existed
-    :param game_id:
+    :param endpoint:
+    :param identifier:
     :param request:
     :param session:
     :return:
     """
     # This code gets the form data from the request
     req_data: dict = await request.json()
-    print(game_id)
-    print(req_data)
+    model = classify(endpoint)
+    if model is None:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
     try:
-        await db.update(session, models.Game, game_id, req_data)
+        await db.update(session, model, identifier, req_data)
     except IntegrityError as e:
         print(e)
         return Response(status_code=status.HTTP_409_CONFLICT)
     except NoResultFound:
-        if await db.has_existed(session, models.Game, game_id):
+        if await db.has_existed(session, model, identifier):
             return Response(status_code=status.HTTP_410_GONE)
         else:
             return Response(status_code=status.HTTP_404_NOT_FOUND)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@app.delete("/games/{game_id}", response_class=HTMLResponse)
-async def delete_game(request: Request, session: Session, game_id: int):
+@app.delete("/{endpoint}/{identifier}", response_class=HTMLResponse)
+async def delete_game(request: Request, session: Session, identifier: int, endpoint: str):
     """
     Route for game record deletion - does not check if the game exists before deletion
-    :param game_id:
+    :param endpoint:
+    :param identifier:
     :param request:
     :param session:
     :return:
     """
     # This code gets the form data from the request
     form = await request.form()
+    model = classify(endpoint)
     print(form)
-    await db.remove_record(session, models.Game, game_id)
+    await db.remove_record(session, model, identifier)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

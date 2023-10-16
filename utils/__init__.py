@@ -7,4 +7,4 @@ noqa tells flake8 to ignore the line in question, and for the rule code specifie
 F401: module imported but unused
 """
 
-from .dbutils import *  # noqa F401
+from .db_utils import *  # noqa F401
