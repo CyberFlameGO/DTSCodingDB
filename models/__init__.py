@@ -22,8 +22,8 @@ class Game(Base):
     __tablename__: str = "games"
 
     match: Mapped[Set["Match"]] = relationship()
-    name: Mapped[str] = mapped_column()
-    description: Mapped[str] = mapped_column()
+    name: Mapped[str] = mapped_column(nullable=False, unique=True)
+    description: Mapped[str] = mapped_column(nullable=False)
 
 
 class User(Base):

@@ -16,6 +16,8 @@ class Database(object):
     Database class for SQLite3.
     Record and row are used interchangeably as well as SQL terms being used interchangeably
      with object terms, where it sounds more natural.
+    Transactions are used for mutations to the database, but aren't deemed necessary (considering the use case) for
+     accessing data, and no situation where they would be useful is likely to arise in the program.
     TODO: Potentially make a variable for table creation query
     """
 
@@ -68,12 +70,12 @@ class Database(object):
         async with session.begin():
             try:
                 session.add(model)
-            except IntegrityError as e:
+            except IntegrityError:
                 await session.rollback()
-                raise DatabaseError(f"IntegrityError encountered whilst executing: {e}")
-            except SQLAlchemyError as e:
+                raise  # re-raise
+            except SQLAlchemyError:
                 await session.rollback()
-                raise DatabaseError(f"SQLAlchemyError encountered whilst executing: {e}")
+                raise  # re-raise
             except Exception as e:
                 await session.rollback()
                 raise DatabaseError(f"Exception encountered whilst executing: {e}")
@@ -92,12 +94,12 @@ class Database(object):
             try:
                 statement = update(model).where(model.id == identifier).values(data)
                 await session.execute(statement)
-            except IntegrityError as e:
+            except IntegrityError:
                 await session.rollback()
-                raise DatabaseError(f"IntegrityError encountered whilst executing: {e}")
-            except SQLAlchemyError as e:
+                raise  # re-raise
+            except SQLAlchemyError:
                 await session.rollback()
-                raise DatabaseError(f"SQLAlchemyError encountered whilst executing: {e}")
+                raise  # re-raise
             except Exception as e:
                 await session.rollback()
                 raise DatabaseError(f"Exception encountered whilst executing: {e}")
@@ -111,10 +113,7 @@ class Database(object):
         :param model:
         :return:
         """
-        try:
-            return await session.get(model, identifier)
-        except SQLAlchemyError as e:
-            raise DatabaseError(f"SQLAlchemyError encountered whilst executing: {e}")
+        return await session.get(model, identifier)
 
     @staticmethod
     async def dump_all(session: AsyncSession, model: Type[Base]) -> Sequence[Base]:
@@ -124,12 +123,9 @@ class Database(object):
         :param model:
         :return:
         """
-        try:
-            statement = select(model)
-            executed = await session.execute(statement)
-            return executed.scalars().all()
-        except SQLAlchemyError as e:
-            raise DatabaseError(f"SQLAlchemyError encountered whilst executing: {e}")
+        statement = select(model)
+        executed = await session.execute(statement)
+        return executed.scalars().all()
 
     @staticmethod
     async def dump_by_field_descending(session: AsyncSession, field, label, limit: int | None = None):
@@ -141,14 +137,11 @@ class Database(object):
         :param limit: Optional limit of records to fetch
         :return:
         """
-        try:
-            statement = select(field, func.count("*").label(label)).group_by(field).order_by(func.count("*").desc())
-            if limit is not None:
-                statement = statement.limit(limit)
-            executed = await session.execute(statement)
-            return executed.all()
-        except SQLAlchemyError as e:
-            raise DatabaseError(f"SQLAlchemyError encountered whilst executing: {e}")
+        statement = select(field, func.count("*").label(label)).group_by(field).order_by(func.count("*").desc())
+        if limit is not None:
+            statement = statement.limit(limit)
+        executed = await session.execute(statement)
+        return executed.all()
 
     @staticmethod
     async def remove_record(session: AsyncSession, model: Type[Base], identifier: int):
@@ -163,12 +156,27 @@ class Database(object):
             try:
                 statement = delete(model).where(model.id == identifier)
                 await session.execute(statement)
-            except SQLAlchemyError as e:
+            except SQLAlchemyError:
                 await session.rollback()
-                raise DatabaseError(f"SQLAlchemyError encountered whilst executing: {e}")
+                raise  # re-raise
             except Exception as e:
                 await session.rollback()
                 raise DatabaseError(f"Exception encountered whilst executing: {e}")
+
+    @staticmethod
+    async def has_existed(session: AsyncSession, model: Type[Base], identifier: int) -> bool:
+        """
+        Checks if a record has existed in the database, relying on the auto-incrementing primary key.
+        There are various flaws with this method/implementation, but they are tolerable considering the method is
+        only used to determine whether a response is 404 Not Found or 410 Gone
+        :param identifier:
+        :param session:
+        :param model:
+        :return:
+        """
+        statement = select(func.max(model.id))
+        executed = await session.execute(statement)
+        return executed.scalar() >= identifier
 
 
 class DatabaseError(Exception):

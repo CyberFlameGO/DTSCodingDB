@@ -5,6 +5,9 @@
         import ResourceManager from '../static/js/utils.js';
 
         let editedGameId = null;
+        const HTTP_409_CONFLICT = 409;
+        const HTTP_404_NOT_FOUND = 404;
+        const HTTP_410_GONE = 410;
 
         window.editGame = async function editGame(id) {
             if (id) {
@@ -27,7 +30,25 @@
                 updatedGame.description = value;
             }
 
-            await ResourceManager.editResource(id, updatedGame, '/games');
+            const response = await ResourceManager.editResource(id, updatedGame, '/games');
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                switch (response.status) {
+                    case HTTP_409_CONFLICT:
+                        alert('You cannot change the name of a game to one that already exists in the database!');
+                        break;
+                    case HTTP_404_NOT_FOUND:
+                        alert('This game does not currently exist in the database.');
+                        break;
+                    case HTTP_410_GONE:
+                        alert('This game has been deleted and no longer exists in the database.');
+                        break;
+                    default:
+                        alert('An unknown error occurred');
+                }
+            }
+
 
             // Hide edit form after submitting
 
@@ -36,9 +57,28 @@
 
         window.deleteGame = async function (id) {
             if (confirm('Are you sure?')) {
-                await ResourceManager.deleteResource(id, '/games');
+                const response = await ResourceManager.deleteResource(id, '/games');
+                if (response.ok) {
+                    window.location.reload();
+                }
             }
         };
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const HTTP_409_CONFLICT = 409;
+            document.getElementById('submitNewGame').addEventListener('submit', function (e) {
+                e.preventDefault();
+                fetch('/games', {
+                    method: 'POST',
+                    body: new FormData(this)
+                }).then(function (response) {
+                    if (!response.ok && response.status === HTTP_409_CONFLICT) {
+                        alert('You cannot add a game with a name that already exists in the database!');
+                    }
+                });
+            });
+        });
     </script>
 {% endblock %}
 
@@ -72,7 +112,7 @@
     </ul>
 
     <h2>Add a new game</h2>
-    <form action = "/games" method = "post">
+    <form id = "submitNewGame" action = "/games" method = "post">
         <label for = "name">Game Name</label>
         <input type = "text" id = "name" name = "name" required><br>
         <label for = "description">Game Description</label>
