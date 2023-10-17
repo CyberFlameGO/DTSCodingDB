@@ -108,6 +108,8 @@ class Database(object):
     async def retrieve(session: AsyncSession, model: Type[Base], identifier: int) -> Optional[Base]:
         """
         Retrieves a record by primary key from a table in the database TODO: adjust return type
+        TODO: Perhaps use get_one instead of get -
+         https://docs.sqlalchemy.org/en/20/changelog/changelog_20.html#change-0d51e82a2a804c30a98a274257fe7b13
         :param identifier:
         :param session:
         :param model:
@@ -128,7 +130,7 @@ class Database(object):
         return executed.scalars().all()
 
     @staticmethod
-    async def dump_by_field_descending(session: AsyncSession, field, label, limit: int | None = None):
+    async def dump_by_field_descending(session: AsyncSession, field, label, limit: Optional[int] = None):
         """
         Dumps records by field in the database TODO: finish writing function
         :param session:

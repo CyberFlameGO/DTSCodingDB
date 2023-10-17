@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 import models
 import utils
-from models import Game
+from models import Base, Game
 
 sentry_sdk.init(
     dsn="https://eebca21dd9c9418cbfe83e7b8a0976de@o317122.ingest.sentry.io/4504873492480000",
@@ -43,7 +43,7 @@ class Endpoint(Enum):
     GAMES = "games"
 
 
-def classify(to_classify: Endpoint | str) -> tuple[Type[Game], Endpoint] | tuple[None, int]:
+def classify(to_classify: Endpoint | str) -> tuple[Type[Base], Endpoint] | tuple[None, int]:
     """
     Abstracts endpoint classification away from route function
     :param to_classify:
@@ -88,7 +88,7 @@ async def home(request: Request, token: OAuth2Scheme):
 
 
 @app.get("/{endpoint}", response_class=HTMLResponse)
-async def records_list(request: Request, session: Session, endpoint: str | Endpoint):
+async def records_list(request: Request, session: Session, endpoint: str):
     """
     Games page
     :param endpoint:
