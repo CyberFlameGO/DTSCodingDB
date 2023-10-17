@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Annotated, Tuple, Type
 
@@ -5,6 +6,7 @@ import sentry_sdk
 from fastapi import Depends, FastAPI, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
+from fastapi.security import OAuth2PasswordBearer
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,9 +30,10 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 db = utils.Database("data.db")  # TODO: setup database tables and re-jig the spreadsheet layout
-Session = Annotated[AsyncSession, Depends(db.get_session)]
+oauth2_scheme = OAuth2PasswordBearer("token")
 
-# TODO: adapt the following:
+Session = Annotated[AsyncSession, Depends(db.get_session)]
+OAuth2Scheme = Annotated[str, oauth2_scheme]
 
 
 class Endpoint(Enum):
@@ -68,12 +71,14 @@ async def shutdown():
 
 
 @app.get("/", response_class=HTMLResponse)
-async def home(request: Request):
+async def home(request: Request, token: OAuth2Scheme):
     """
     Home page
+    :param token:
     :param request:
     :return:
     """
+    print(token)
     return templates.TemplateResponse(
         "index.html",
         {
