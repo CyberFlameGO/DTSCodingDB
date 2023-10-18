@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from models import Base
 
+type base_type = Type[Base]
 
 class Database(object):
     """
@@ -35,6 +36,8 @@ class Database(object):
     async def connect(self) -> None:
         """
         Initializes the database connection - creates sessionmaker and engine
+        'connect' is a misleading term here, but calling it 'init' would be even more misleading so I've opted for this
+        terminology.
         :return:
         """
         self.engine: AsyncEngine = create_async_engine(f"sqlite+aiosqlite:///{self._db_name}")
@@ -105,7 +108,7 @@ class Database(object):
                 raise DatabaseError(f"Exception encountered whilst executing: {e}")
 
     @staticmethod
-    async def retrieve(session: AsyncSession, model: Type[Base], identifier: int) -> Optional[Base]:
+    async def retrieve(session: AsyncSession, model: base_type, identifier: int) -> base_type:
         """
         Retrieves a record by primary key from a table in the database TODO: adjust return type
         TODO: Perhaps use get_one instead of get -
@@ -115,10 +118,25 @@ class Database(object):
         :param model:
         :return:
         """
-        return await session.get(model, identifier)
+        return await session.get_one(model, identifier)
 
     @staticmethod
-    async def dump_all(session: AsyncSession, model: Type[Base]) -> Sequence[Base]:
+    async def retrieve_by_field(session: AsyncSession, model: base_type, field, identifier) -> base_type:
+        """
+        Retrieves a record by field value from a table in the database
+        Intended to retrieve only the first value (use-case: table with UNIQUE constraint)
+        :param session:
+        :param model:
+        :param field: The field in model.field format
+        :param identifier:
+        :return:
+        """
+        statement = select(model).where(field == identifier)
+        executed = await session.execute(statement)
+        return executed.scalar_one()
+
+    @staticmethod
+    async def dump_all(session: AsyncSession, model: base_type) -> Sequence[Base]:
         """
         Dumps all records for a model in the database TODO: finish writing function
         :param session:
@@ -146,7 +164,7 @@ class Database(object):
         return executed.all()
 
     @staticmethod
-    async def remove_record(session: AsyncSession, model: Type[Base], identifier: int):
+    async def remove_record(session: AsyncSession, model: base_type, identifier: int):
         """
         Removes a record from the database
         :param session:
@@ -166,7 +184,7 @@ class Database(object):
                 raise DatabaseError(f"Exception encountered whilst executing: {e}")
 
     @staticmethod
-    async def has_existed(session: AsyncSession, model: Type[Base], identifier: int) -> bool:
+    async def has_existed(session: AsyncSession, model: base_type, identifier: int) -> bool:
         """
         Checks if a record has existed in the database, relying on the auto-incrementing primary key.
         There are various flaws with this method/implementation, but they are tolerable considering the method is

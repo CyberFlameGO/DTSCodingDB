@@ -8,3 +8,4 @@ F401: module imported but unused
 """
 
 from .db_utils import *  # noqa F401
+from .auth import *  # noqa F401
