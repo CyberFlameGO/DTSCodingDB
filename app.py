@@ -1,20 +1,19 @@
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from enum import Enum
-from typing import Annotated, Tuple, Type
+from typing import Annotated, Type
 
 import sentry_sdk
-from fastapi import Depends, FastAPI, Request, status, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
 
 import models
 import utils
-from models import Base, Game, PydanticUser, Token, User
+from models import Base, PydanticUser, Token, User
 
 sentry_sdk.init(
     dsn="https://eebca21dd9c9418cbfe83e7b8a0976de@o317122.ingest.sentry.io/4504873492480000",
@@ -92,7 +91,7 @@ async def home(request: Request):
 
 
 @app.post("/token", response_model=Token)
-async def login_for_access_token(
+async def authenticate(
         form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
         session: Session,
 ):
@@ -122,7 +121,6 @@ async def read_own_items(
         current_user: Current_Active_User
 ):
     return [{"item_id": "Foo", "owner": current_user.username}]
-
 
 
 @app.get("/{endpoint}", response_class=HTMLResponse)

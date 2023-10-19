@@ -28,8 +28,8 @@ img {
 h1, h2, h3, h4 {
   padding: 1rem 0;
   font-family: 'Suez One', serif;
-  color: #000000;
-  text-shadow: 2px 2px 4px #ffffff;
+  color: #000;
+  text-shadow: 2px 2px 4px #fff;
 }
 
 header {
@@ -87,24 +87,24 @@ a, a:visited {
 main {
   grid-area: main;
   padding: 1rem;
-  background-color: #eedddd;
+  background-color: #edd;
 }
 
 table {
   width: 100%;
-  border: 2px solid #666666;
+  border: 2px solid #666;
   border-collapse: collapse;
 }
 
 th, td {
-  border: 1px solid #888888;
+  border: 1px solid #888;
   padding: 0.2rem;
   text-align: left;
 }
 
 th {
-  background-color: #000000;
-  color: #ffffff;
+  background-color: #000;
+  color: #fff;
 }
 
 img .thumb {
@@ -118,8 +118,8 @@ footer {
 }
 
 footer p {
-  color: #000000;
-  text-shadow: 2px 2px 4px #ffffff;
+  color: #000;
+  text-shadow: 2px 2px 4px #fff;
   font-size: 1.5rem;
 }
 
@@ -169,7 +169,7 @@ footer img {
     height: 4px;
     margin-bottom: 5px;
     position: relative;
-    background: #000000;
+    background: #000;
     border-radius: 3px;
     z-index: 1;
     transform-origin: 4px 0;
@@ -193,7 +193,7 @@ footer img {
   nav input:checked ~ span {
     opacity: 1;
     transform: rotate(45deg) translate(-2px, -1px);
-    background: #000000;
+    background: #000;
   }
 
   /*
@@ -263,13 +263,13 @@ footer img {
   }
 
   nav a {
-    color: #ffffff;
+    color: #fff;
     text-decoration: none;
   }
 
   nav a:hover {
-    color: #000000;
-    background-color: #ffffff;
+    color: #000;
+    background-color: #fff;
   }
 
   nav input, nav span {
@@ -280,13 +280,13 @@ footer img {
     /* background-image: url('/poutama.jpg'); */
   }
 
-  .formRow {
+  .form-row {
     display: grid;
     grid-template-columns: 1fr 2fr;
     margin: 0.5rem 0;
   }
 
-  .dataForm p input {
+  .data-form p input {
     display: inline;
   }
 }
