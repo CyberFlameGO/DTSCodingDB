@@ -5,11 +5,12 @@
         import ResourceManager from '../static/js/utils.js';
 
         let editedGameId = null;
+        const auth_token = ResourceManager.getCookie('auth_token');
         const HTTP_409_CONFLICT = 409;
         const HTTP_404_NOT_FOUND = 404;
         const HTTP_410_GONE = 410;
 
-        window.editGame = async function editGame(id) {
+        window.editGame = async function editGame (id) {
             if (id) {
                 editedGameId = id;
 
@@ -19,7 +20,7 @@
             }
         };
 
-        window.submitChanges = async function submitChanges(id) {
+        window.submitChanges = async function submitChanges (id) {
             const field = document.getElementById('selector' + id).value;
             const value = document.getElementById('edit' + id).value;
             let updatedGame = {};
@@ -30,7 +31,7 @@
                 updatedGame.description = value;
             }
 
-            const response = await ResourceManager.editResource(id, updatedGame, '/games');
+            const response = await ResourceManager.editResource(id, updatedGame, '/games', auth_token);
             if (response.ok) {
                 window.location.reload();
             } else {
@@ -55,9 +56,9 @@
             document.getElementById('edit_form' + id).style.display = 'none';
         };
 
-        window.deleteGame = async function(id) {
+        window.deleteGame = async function (id) {
             if (confirm('Are you sure?')) {
-                const response = await ResourceManager.deleteResource(id, '/games');
+                const response = await ResourceManager.deleteResource(id, '/games', auth_token);
                 if (response.ok) {
                     window.location.reload();
                 }
@@ -65,7 +66,7 @@
         };
         document.addEventListener('DOMContentLoaded', () => {
             ResourceManager.handleFormSubmission('submitNewGame',
-                'You cannot add a game with a name that already exists in the database!');
+                'You cannot add a game with a name that already exists in the database!', auth_token);
         });
     </script>
 {% endblock %}
@@ -77,7 +78,7 @@
         {% for game in games %}
             <li>
                 {{ game.name }}
-                {% if can_mutate_games %}
+                {% if editing_stick %}
                     <button onclick = "editGame({{ game.id }})" type = "button">Edit</button>
                     <button onclick = "deleteGame({{ game.id }})" type = "button">Delete</button>
 
@@ -98,14 +99,15 @@
             </li>
         {% endfor %}
     </ul>
-
-    <h2>Add a new game</h2>
-    <form id = "submitNewGame" action = "/games" method = "post">
-        <label for = "name">Game Name</label>
-        <input type = "text" id = "name" name = "name" required><br>
-        <label for = "description">Game Description</label>
-        <input type = "text" id = "description" name = "description" required><br>
-        <input type = "submit" value = "Submit">
-    </form>
+    {% if editing_stick %}
+        <h2>Add a new game</h2>
+        <form id = "submitNewGame" action = "/games" method = "post">
+            <label for = "name">Game Name</label>
+            <input type = "text" id = "name" name = "name" required><br>
+            <label for = "description">Game Description</label>
+            <input type = "text" id = "description" name = "description" required><br>
+            <input type = "submit" value = "Submit">
+        </form>
+    {% endif %}
 
 {% endblock %}

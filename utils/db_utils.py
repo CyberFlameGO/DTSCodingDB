@@ -132,6 +132,7 @@ class Database(object):
         :param identifier:
         :return:
         """
+        # noinspection PyTypeChecker
         statement = select(model).where(field == identifier)
         executed = await session.execute(statement)
         return executed.scalar_one_or_none()

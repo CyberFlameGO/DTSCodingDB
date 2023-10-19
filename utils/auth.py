@@ -3,7 +3,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from typing import Annotated
+from typing import Annotated, Optional, Tuple
 
 from models import User
 from models.pydantic import PydanticUser, TokenData, UserInDB
@@ -13,7 +13,7 @@ from utils import Database
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-async def get_current_user(session, token: Annotated[str, Depends(oauth2_scheme)]):
+def get_authdata(token: Annotated[str, Depends(oauth2_scheme)]):
     try:
         payload = jwt.decode(token, Auth.SECRET_KEY, algorithms=[Auth.ALGORITHM])
         username: str = payload.get("sub")
@@ -22,10 +22,8 @@ async def get_current_user(session, token: Annotated[str, Depends(oauth2_scheme)
         token_data = TokenData(username=username)
     except JWTError:
         raise Auth.credentials_exception
-    user = await Auth.get_user(session, username=token_data.username)
-    if user is None:
-        raise Auth.credentials_exception
-    return user
+    # fastapi dependency injection doesn't support what i'm trying to do well enough, so this is a nasty workaround
+    return token_data
 
 
 class Auth(object):
@@ -56,7 +54,7 @@ class Auth(object):
         data = await Database.retrieve_by_field(session, User, User.username, username)
         if data:
             data_dict = data.__dict__
-            data_dict.pop('_sa_instance_state', None)  # remove unwanted SQLAlchemy fields
+            data_dict.pop("_sa_instance_state", None)  # remove unwanted SQLAlchemy fields
             return UserInDB(**data_dict)
 
     @classmethod
@@ -79,9 +77,11 @@ class Auth(object):
         encoded_jwt = jwt.encode(to_encode, cls.SECRET_KEY, algorithm=cls.ALGORITHM)
         return encoded_jwt
 
-
     @staticmethod
-    async def get_current_active_user(current_user: Annotated[PydanticUser, Depends(get_current_user)]):
-        if current_user.disabled:
-            raise HTTPException(status_code=400, detail="Inactive user")
-        return current_user
+    def get_authorization_scheme_param(
+        authorization_header_value: Optional[str],
+    ) -> Tuple[str, str]:
+        if not authorization_header_value:
+            return "", ""
+        scheme, _, param = authorization_header_value.partition(" ")
+        return scheme, param

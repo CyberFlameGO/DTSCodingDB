@@ -4,7 +4,7 @@ from typing import Annotated, Type
 
 import sentry_sdk
 from fastapi import Depends, FastAPI, HTTPException, Request, status
-from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, Response, RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 import models
 import utils
-from models import Base, PydanticUser, Token, User
+from models import Base, MatchPlayers, MatchResult, Token, User
 
 sentry_sdk.init(
     dsn="https://eebca21dd9c9418cbfe83e7b8a0976de@o317122.ingest.sentry.io/4504873492480000",
@@ -32,7 +32,6 @@ db = utils.Database("data.db")  # TODO: setup database tables and re-jig the spr
 
 Auth = utils.Auth
 Session = Annotated[AsyncSession, Depends(db.get_session)]
-Current_Active_User = Annotated[PydanticUser, Depends(Auth.get_current_active_user)]
 
 
 class Endpoint(Enum):
@@ -41,27 +40,76 @@ class Endpoint(Enum):
     """
 
     GAMES = "games"
+    MATCH = "match"
     LOGIN = "login"
     REGISTER = "register"
 
 
-def classify(to_classify: Endpoint | str) -> tuple[Type[Base], Endpoint] | tuple[None, int]:
+class Roles(Enum):
+    """
+    Enum of roles
+    """
+
+    LEADER = "leader"
+    STUDENT = "student"
+    TEACHER = "teacher"
+
+
+async def get_user(session, token: str):
+    data = utils.get_authdata(token)
+    user = await Auth.get_user(session, username=data.username)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return user
+
+
+def classify_endpoint(to_classify: Endpoint | str) -> tuple[Type[Base] | None, Endpoint | int]:
     """
     Abstracts endpoint classification away from route function
+    These two are intentionally separated for annotation purposes and readability.
+    The second parameter in the return (which is just be a tuple) is also intentionally there for readability
     :param to_classify:
     :return:
     """
-    try:
+    if to_classify in Endpoint:
         subject = Endpoint(to_classify)
-    except ValueError:
+    else:
         return None, status.HTTP_404_NOT_FOUND
     match subject:
         case Endpoint.GAMES:
             return models.Game, subject
         case Endpoint.LOGIN | Endpoint.REGISTER:
             return models.User, subject
+        case Endpoint.MATCH:
+            return models.Match, subject
         case _:
             return None, status.HTTP_404_NOT_FOUND
+
+
+def classify_role(to_classify: Roles | str):
+    """
+    Abstracts role classification away from route function.
+    These two are intentionally separated for annotation purposes and readability.
+    :param to_classify:
+    :return:
+    """
+    if to_classify in Roles:
+        subject = Roles(to_classify)
+    else:
+        return None, status.HTTP_404_NOT_FOUND
+    match subject:
+        case Roles.LEADER:
+            return models.User, subject
+        case Roles.STUDENT:
+            return models.User, subject
+        case Roles.TEACHER:
+            return models.User, subject
+        case _:
+            return Roles.STUDENT
 
 
 @app.on_event("startup")
@@ -75,12 +123,18 @@ async def shutdown():
 
 
 @app.get("/", response_class=HTMLResponse)
-async def home(request: Request):
+async def home(request: Request, session: Session):
     """
     Home page
+    :param session:
     :param request:
     :return:
     """
+    token = request.cookies.get("access_token")
+    print(token)
+    if token:
+        val = await get_user(session, token)
+        print(val.role)
     return templates.TemplateResponse(
         "index.html",
         {
@@ -103,17 +157,63 @@ async def authenticate(
         )
     access_token_expires = timedelta(minutes=Auth.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = Auth.create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
-    return {"access_token": access_token, "token_type": "bearer"}
+    response = RedirectResponse(url="/")
+    response.set_cookie(
+        key="access_token", value=access_token, expires=int(access_token_expires.total_seconds())
+    )  # insecure but this program would need a
+    # production context for a secure implementation (as in, one in mind for program design)
+    return response
 
 
-@app.get("/users/me/", response_model=PydanticUser)
-async def read_users_me(current_user: Current_Active_User):
-    return current_user
+@app.post("/register", response_class=HTMLResponse)
+async def register(request: Request, session: Session):
+    form = await request.form()
+    new_user = User(
+        email=form.get("email"),
+        username=form.get("username"),
+        password=Auth.get_password_hash(form.get("password")),
+        role=form.get("role"),
+        first_name=form.get("first_name"),
+        last_name=form.get("last_name"),
+        year_level=form.get("year_level"),
+        house=form.get("house"),
+    )
+    try:
+        await db.insert(session, new_user)
+    except IntegrityError:
+        return Response(status_code=status.HTTP_409_CONFLICT)
+    return JSONResponse(content={"redirectUrl": "/"}, status_code=status.HTTP_303_SEE_OTHER)
 
 
-@app.get("/users/me/items/")
-async def read_own_items(current_user: Current_Active_User):
-    return [{"item_id": "Foo", "owner": current_user.username}]
+@app.get("/login", response_class=HTMLResponse)
+async def login(request: Request):
+    """
+    Login page
+    :param request:
+    :return:
+    """
+    return templates.TemplateResponse(
+        "login.html",
+        {
+            "request": request,
+        },
+    )
+
+
+@app.get("/auth_needed", response_class=HTMLResponse)
+async def auth_needed(request: Request):
+    """
+    TODO: make httpexception thing go here
+    Auth needed page
+    :param request:
+    :return:
+    """
+    return templates.TemplateResponse(
+        "auth_needed.html",
+        {
+            "request": request,
+        },
+    )
 
 
 @app.get("/{endpoint}", response_class=HTMLResponse)
@@ -125,7 +225,12 @@ async def records_list(request: Request, session: Session, endpoint: str):
     :param request:
     :return:
     """
-    model, endpoint_type = classify(endpoint)
+    token = request.cookies.get("access_token")
+    if not token:
+        return RedirectResponse(url="/auth_needed")
+    user = await get_user(session, token)
+
+    model, endpoint_type = classify_endpoint(endpoint)
     if model is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     context: dict = {
@@ -134,7 +239,8 @@ async def records_list(request: Request, session: Session, endpoint: str):
     match endpoint_type:
         case Endpoint.GAMES:
             context["games"] = await db.dump_all(session, model)
-            context["can_mutate"] = True
+            if user.role == Roles.TEACHER.value:
+                context["editing_stick"] = True  # you've met the talking stick, get ready for the editing stick.
         case _:
             pass
     return templates.TemplateResponse(
@@ -147,28 +253,39 @@ async def records_list(request: Request, session: Session, endpoint: str):
 async def new_record(request: Request, session: Session, endpoint: str):
     """
     New game page
+    :param user:
+    :param token:
     :param endpoint:
     :param request:
     :param session:
     :return:
     """
     # This code gets the form data from the request
+    authorization = request.headers.get("Authorization")
+    print(authorization)
+    scheme, param = Auth.get_authorization_scheme_param(authorization)  # todo: get token sent properly and refer to
+    # todo: prior commit for depends if that works - this implementation just ditches the 401 from oauth2_scheme
+    print(scheme, param)
+    user = object  # await get_user(session, param)
     form = await request.form()
     print(form)
-    model, endpoint_type = classify(endpoint)
+    model, endpoint_type = classify_endpoint(endpoint)
     match endpoint_type:
         case Endpoint.GAMES:
             model_instance = model(name=form.get("name"), description=form.get("description"))
-        case Endpoint.REGISTER:
-            model_instance = User(
-                email=form.get("email"),
-                username=form.get("username"),
-                password=Auth.get_password_hash(form.get("password")),
-                role=form.get("role"),
-                first_name=form.get("first_name"),
-                last_name=form.get("last_name"),
-                year_level=form.get("year_level"),
-                house=form.get("house"),
+        case Endpoint.MATCH:
+            winner = await db.retrieve_by_field(session, User, User.username, form.get("winner"))
+            loser = await db.retrieve_by_field(session, User, User.username, form.get("loser"))
+            model_instance = model(
+                creator_id=user.id,  # TODO: get user id from token
+                played_at=form.get("played_at") if form.get("played_at") else None,
+                players={
+                    MatchPlayers(
+                        player_id=winner.id,
+                    ),
+                    MatchPlayers(player_id=loser.id),
+                },
+                results=MatchResult(won_id=winner.id, lost_id=loser.id),
             )
         case _:
             return Response(status_code=status.HTTP_404_NOT_FOUND)
@@ -176,8 +293,6 @@ async def new_record(request: Request, session: Session, endpoint: str):
         await db.insert(session, model_instance)
     except IntegrityError:
         return Response(status_code=status.HTTP_409_CONFLICT)
-    if endpoint_type == Endpoint.REGISTER:
-        return JSONResponse(content={"redirectUrl": f"/"}, status_code=status.HTTP_303_SEE_OTHER)
     return JSONResponse(content={"redirectUrl": f"/{endpoint_type.value}"}, status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -195,7 +310,7 @@ async def update_record(request: Request, session: Session, identifier: int, end
     """
     # This code gets the form data from the request
     req_data: dict = await request.json()
-    model, endpoint_type = classify(endpoint)
+    model, endpoint_type = classify_endpoint(endpoint)
     if model is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     try:
@@ -223,7 +338,7 @@ async def delete_game(request: Request, session: Session, identifier: int, endpo
     """
     # This code gets the form data from the request
     form = await request.form()
-    model, endpoint_type = classify(endpoint)
+    model, endpoint_type = classify_endpoint(endpoint)
     print(form)
     await db.remove_record(session, model, identifier)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -2,22 +2,46 @@ export default class ResourceManager {
     // The methods in this class are designed to have one point return for readability purposes.
     // This is noted here to explain the redundant-looking code in the methods below.
 
-    static handleFormSubmission(formId, conflictMessage) {
+    static getCookie(cname) {
+        let name = cname + '=';
+        let decodedCookie = decodeURIComponent(document.cookie);
+        let ca = decodedCookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) === 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return '';
+    }
+
+    static handleFormSubmission(formId, conflictMessage, token) {
+        // added optional token parameter
         // This particular method has status codes hard-coded on purpose.
         const HTTP_409_CONFLICT = 409;
         const HTTP_303_SEE_OTHER = 303;
         // Store reference to "this" context
         const that = this;
+
         document
             .getElementById(formId)
             .addEventListener('submit', async function (e) {
                 e.preventDefault();
                 const form = this;
                 try {
+                    const headers = {}; // predefine headers object
+                    if (token) {
+                        // If the token exists, add authorization bearer header
+                        headers.Authorization = `Bearer ${token}`;
+                    }
                     const response = await that.sendRequest(
                         form.action,
                         'POST',
-                        new FormData(form)
+                        new FormData(form),
+                        headers // passing headers to the sendRequest method
                     );
                     if (response.status === HTTP_409_CONFLICT) {
                         alert(conflictMessage);
@@ -52,23 +76,38 @@ export default class ResourceManager {
         return await fetch(url, options);
     }
 
-    static async editResource(resourceId, resourceDetails, resourceURL) {
+    static async editResource(resourceId, resourceDetails, resourceURL, token) {
+        // added token parameter
         let result = null;
         const url = `${resourceURL}/${resourceId}`;
+
+        // define headers if token is available
+        const headers = token ? {Authorization: `Bearer ${token}`} : null;
+
         try {
-            result = await this.sendRequest(url, 'PATCH', resourceDetails);
+            result = await this.sendRequest(
+                url,
+                'PATCH',
+                resourceDetails,
+                headers
+            ); // pass headers as a parameter
         } catch (error) {
             console.error('Error:', error);
         }
         return result;
     }
 
-    static async deleteResource(resourceId, resourceURL) {
+    static async deleteResource(resourceId, resourceURL, token) {
+        // added token parameter
         let res = null;
 
         const url = `${resourceURL}/${resourceId}`;
+
+        // define headers if token is available
+        const headers = token ? {Authorization: `Bearer ${token}`} : null;
+
         try {
-            res = await this.sendRequest(url, 'DELETE');
+            res = await this.sendRequest(url, 'DELETE', null, headers); // pass headers as a parameter
         } catch (error) {
             console.error('Error:', error);
         }

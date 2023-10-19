@@ -1,17 +1,34 @@
 {% extends 'base.html' %}
 
 {% block head %}
+    <!--suppress JSCheckFunctionSignatures -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('userLogin').addEventListener('submit', function() {
-                fetch(this.action, {
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.getElementById('userLogin').addEventListener('submit', function (event) {
+                // noinspection JSCheckFunctionSignatures
+                fetch('/token', {
                     method: 'POST',
-                    body: new FormData(this),
-                }).then(function(response) {
-                    if (!response.ok) {
-                        alert('Invalid username or password!');
-                    }
-                });
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams(new FormData(this)),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data['access_token']) {
+                            // Handle the received token here, e.g., save it to local storage for future use
+                            localStorage.setItem('token', data['access_token']);
+                            window.location.href = '/';
+                        } else {
+                            alert('Invalid username or password!');
+                            // todo: handle server properly - correct login displays this
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert('An error occurred. Please try again.');
+                    });
+                event.preventDefault();
             });
         });
     </script>
@@ -20,12 +37,12 @@
 {% block content %}
     <h1>User Login</h1>
 
-    <form id = "userLogin" action = "/login" method = "post">
+    <form id = "userLogin" action = "#" method = "post">
         <label for = "username">Username</label>
-        <input type = "text" id = "username" name = "username" required><br>
+        <input type = "text" id = "username" name = "username" autocomplete = 'username' required><br>
 
         <label for = "password">Password</label>
-        <input type = "password" id = "password" name = "password" required><br>
+        <input type = "password" id = "password" name = "password" autocomplete = 'current-password' required><br>
 
         <input type = "submit" value = "Login">
     </form>
