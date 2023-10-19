@@ -55,7 +55,7 @@
             document.getElementById('edit_form' + id).style.display = 'none';
         };
 
-        window.deleteGame = async function (id) {
+        window.deleteGame = async function(id) {
             if (confirm('Are you sure?')) {
                 const response = await ResourceManager.deleteResource(id, '/games');
                 if (response.ok) {
@@ -67,12 +67,11 @@
     <script>
         document.addEventListener('DOMContentLoaded', (event) => {
             const HTTP_409_CONFLICT = 409;
-            document.getElementById('submitNewGame').addEventListener('submit', function (e) {
-                e.preventDefault();
-                fetch('/games', {
+            document.getElementById('submitNewGame').addEventListener('submit', function() {
+                fetch(event.target.action, {
                     method: 'POST',
-                    body: new FormData(this)
-                }).then(function (response) {
+                    body: new FormData(this),
+                }).then(function(response) {
                     if (!response.ok && response.status === HTTP_409_CONFLICT) {
                         alert('You cannot add a game with a name that already exists in the database!');
                         // TODO: abstract this into utility class, and handle the response
@@ -103,7 +102,7 @@
                 </select>
 
                 <label for = "edit{{ game.id }}">New value:</label>
-                <input type = "text" id = "edit{{ game.id }}"/>
+                <input type = "text" id = "edit{{ game.id }}" />
 
                 <button id = "submit{{ game.id }}" onclick = "submitChanges({{ game.id }})">Submit</button>
             </span>

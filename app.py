@@ -14,8 +14,7 @@ from pydantic import BaseModel
 
 import models
 import utils
-from models import Base, Game, PydanticUser, Token
-from utils import ACCESS_TOKEN_EXPIRE_MINUTES, authenticate_user, create_access_token, get_current_active_user
+from models import Base, Game, PydanticUser, Token, User
 
 sentry_sdk.init(
     dsn="https://eebca21dd9c9418cbfe83e7b8a0976de@o317122.ingest.sentry.io/4504873492480000",
@@ -31,10 +30,10 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 db = utils.Database("data.db")  # TODO: setup database tables and re-jig the spreadsheet layout
-oauth2_scheme = OAuth2PasswordBearer("token")
 
+Auth = utils.Auth
 Session = Annotated[AsyncSession, Depends(db.get_session)]
-OAuth2Scheme = Annotated[str, oauth2_scheme]
+Current_Active_User = Annotated[PydanticUser, Depends(Auth.get_current_active_user)]
 
 
 class Endpoint(Enum):
@@ -42,6 +41,8 @@ class Endpoint(Enum):
     Enum of endpoints
     """
     GAMES = "games"
+    LOGIN = "login"
+    REGISTER = "register"
 
 
 def classify(to_classify: Endpoint | str) -> tuple[Type[Base], Endpoint] | tuple[None, int]:
@@ -57,6 +58,8 @@ def classify(to_classify: Endpoint | str) -> tuple[Type[Base], Endpoint] | tuple
     match subject:
         case Endpoint.GAMES:
             return models.Game, subject
+        case Endpoint.LOGIN | Endpoint.REGISTER:
+            return models.User, subject
         case _:
             return None, status.HTTP_404_NOT_FOUND
 
@@ -72,14 +75,12 @@ async def shutdown():
 
 
 @app.get("/", response_class=HTMLResponse)
-async def home(request: Request, token: OAuth2Scheme):
+async def home(request: Request):
     """
     Home page
-    :param token:
     :param request:
     :return:
     """
-    print(token)
     return templates.TemplateResponse(
         "index.html",
         {
@@ -89,7 +90,7 @@ async def home(request: Request, token: OAuth2Scheme):
 
 
 @app.get("/{endpoint}", response_class=HTMLResponse)
-async def records_list(request: Request, session: Session, endpoint: str):
+async def records_list(request: Request, session: Session, endpoint: str, token: str = Depends()):
     """
     Games page
     :param endpoint:
@@ -100,14 +101,18 @@ async def records_list(request: Request, session: Session, endpoint: str):
     model, endpoint_type = classify(endpoint)
     if model is None:
         return Response(status_code = status.HTTP_404_NOT_FOUND)
-
+    context: dict = {
+        "request": request,
+    }
+    match endpoint_type:
+        case Endpoint.GAMES:
+            context["games"] = await db.dump_all(session, model)
+            context["can_mutate"] = True
+        case _:
+            pass
     return templates.TemplateResponse(
         f"{endpoint_type.value}.html",
-        {
-            "request": request,
-            endpoint_type.value: await db.dump_all(session, model),
-            "can_mutate_games": True,
-        },
+        context,
     )
 
 
@@ -127,6 +132,17 @@ async def new_record(request: Request, session: Session, endpoint: str):
     match endpoint_type:
         case Endpoint.GAMES:
             model_instance = model(name=form.get("name"), description=form.get("description"))
+        case Endpoint.REGISTER:
+            model_instance = User(
+                email=form.get("email"),
+                username=form.get("username"),
+                password=Auth.get_password_hash(form.get("password")),
+                role=form.get("role"),
+                first_name=form.get("first_name"),
+                last_name=form.get("last_name"),
+                year_level=form.get("year_level"),
+                house=form.get("house")
+            )
         case _:
             return Response(status_code=status.HTTP_404_NOT_FOUND)
     try:
@@ -220,15 +236,15 @@ async def login_for_access_token(
         form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
         session: Session,
 ):
-    user = await authenticate_user(session, form_data.username, form_data.password)
+    user = await Auth.authenticate_user(session, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
+    access_token_expires = timedelta(minutes=Auth.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = await Auth.create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
@@ -236,13 +252,13 @@ async def login_for_access_token(
 
 @app.get("/users/me/", response_model=PydanticUser)
 async def read_users_me(
-        current_user: Annotated[PydanticUser, Depends(get_current_active_user)]
+        current_user: Current_Active_User
 ):
     return current_user
 
 
 @app.get("/users/me/items/")
 async def read_own_items(
-        current_user: Annotated[PydanticUser, Depends(get_current_active_user)]
+        current_user: Current_Active_User
 ):
     return [{"item_id": "Foo", "owner": current_user.username}]

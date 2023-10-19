@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const HTTP_409_CONFLICT = 409;
+            document.getElementById('submitNewUser').addEventListener('submit', function() {
+                fetch(event.target.action, {
+                    method: 'POST',
+                    body: new FormData(this),
+                }).then(function(response) {
+                    if (!response.ok && response.status === HTTP_409_CONFLICT) {
+                        alert('You cannot add a user with an email or username that already exists in the database!');
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+    <h1>User Registration</h1>
+
+    <form id = "submitNewUser" action = "/register" method = "post">
+        <label for = "email">Email</label>
+        <input type = "email" id = "email" name = "email" required><br>
+
+        <label for = "username">Username</label>
+        <input type = "text" id = "username" name = "username" required><br>
+
+        <label for = "password">Password</label>
+        <input type = "password" id = "password" name = "password" required><br>
+
+        <label for = "role">Role</label>
+        <input type = "text" id = "role" name = "role" required><br>
+
+        <label for = "first_name">First Name</label>
+        <input type = "text" id = "first_name" name = "first_name" required><br>
+
+        <label for = "last_name">Last Name</label>
+        <input type = "text" id = "last_name" name = "last_name" required><br>
+
+        <label for = "year_level">Year Level</label>
+        <input type = "number" id = "year_level" name = "year_level"><br>
+
+        <label for = "house">House</label>
+        <input type = "text" id = "house" name = "house" required><br>
+
+        <input type = "submit" value = "Register">
+    </form>
+{% endblock %}

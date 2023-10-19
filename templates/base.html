@@ -10,7 +10,7 @@
     <link rel = "stylesheet" type = "text/css"
           href = "https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
           integrity = "sha512-NhSC1YmyruXifcj/KFRWoC561YpHpc5Jtzgvbuzx5VozKpWvQ+4nXhPdFgmx8xqexRcpAglTj9sIBWINXa8x5w=="
-          crossorigin = "anonymous" referrerpolicy = "no-referrer"/>
+          crossorigin = "anonymous" referrerpolicy = "no-referrer" />
 
     <link href = "{{ url_for('static', path='css/style.css') }}" rel = "stylesheet" type = "text/css">
 
@@ -32,12 +32,14 @@
 
     <nav>
         <label>
-            <input type = "checkbox" name = "drop_down_menu"/>
+            <input type = "checkbox" name = "drop_down_menu" />
         </label>
         <span></span>
         <ul>
+            <!-- this is written manually in case pages are added that aren't meant to be user-facing -->
             <li><a href = "/">Home</a></li>
             <li><a href = "/games">Games</a></li>
+            <li><a href = "/register">Register</a></li>
         </ul>
     </nav>
 
