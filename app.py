@@ -81,6 +81,8 @@ async def home(request: Request):
     :param request:
     :return:
     """
+    for route in app.routes:
+        print(route)
     return templates.TemplateResponse(
         "index.html",
         {
@@ -89,8 +91,42 @@ async def home(request: Request):
     )
 
 
+@app.post("/token", response_model=Token)
+async def login_for_access_token(
+        form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+        session: Session,
+):
+    user = await Auth.authenticate_user(session, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=Auth.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = Auth.create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@app.get("/users/me/", response_model=PydanticUser)
+async def read_users_me(
+        current_user: Current_Active_User
+):
+    return current_user
+
+
+@app.get("/users/me/items/")
+async def read_own_items(
+        current_user: Current_Active_User
+):
+    return [{"item_id": "Foo", "owner": current_user.username}]
+
+
+
 @app.get("/{endpoint}", response_class=HTMLResponse)
-async def records_list(request: Request, session: Session, endpoint: str, token: str = Depends()):
+async def records_list(request: Request, session: Session, endpoint: str):
     """
     Games page
     :param endpoint:
@@ -229,36 +265,3 @@ async def get_match(request: Request, match_id: int, session: Session):
         # TODO: adjust with a proper page regarding no match found with id
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     return templates.TemplateResponse("matches.html", {"request": request, "id": match_id, "match": match})
-
-
-@app.post("/token", response_model=Token)
-async def login_for_access_token(
-        form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-        session: Session,
-):
-    user = await Auth.authenticate_user(session, form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token_expires = timedelta(minutes=Auth.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = await Auth.create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
-    )
-    return {"access_token": access_token, "token_type": "bearer"}
-
-
-@app.get("/users/me/", response_model=PydanticUser)
-async def read_users_me(
-        current_user: Current_Active_User
-):
-    return current_user
-
-
-@app.get("/users/me/items/")
-async def read_own_items(
-        current_user: Current_Active_User
-):
-    return [{"item_id": "Foo", "owner": current_user.username}]

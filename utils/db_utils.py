@@ -12,6 +12,7 @@ from models import Base
 
 type base_type = Type[Base]
 
+
 class Database(object):
     """
     Database class for SQLite3.
@@ -133,7 +134,7 @@ class Database(object):
         """
         statement = select(model).where(field == identifier)
         executed = await session.execute(statement)
-        return executed.scalar_one()
+        return executed.scalar_one_or_none()
 
     @staticmethod
     async def dump_all(session: AsyncSession, model: base_type) -> Sequence[Base]:

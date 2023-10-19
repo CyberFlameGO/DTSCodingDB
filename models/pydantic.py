@@ -7,7 +7,6 @@ from pydantic import BaseModel
 class PydanticUser(BaseModel):
     email: str
     username: str
-    password: str
     role: str
     first_name: str
     last_name: str
@@ -27,4 +26,4 @@ class TokenData(BaseModel):
 
 
 class UserInDB(PydanticUser):
-    hashed_password: str
+    password: str
