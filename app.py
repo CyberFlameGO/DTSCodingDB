@@ -39,6 +39,7 @@ class Endpoint(Enum):
     """
     Enum of endpoints
     """
+
     GAMES = "games"
     LOGIN = "login"
     REGISTER = "register"
@@ -90,8 +91,8 @@ async def home(request: Request):
 
 @app.post("/token", response_model=Token)
 async def authenticate(
-        form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-        session: Session,
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    session: Session,
 ):
     user = await Auth.authenticate_user(session, form_data.username, form_data.password)
     if not user:
@@ -101,23 +102,17 @@ async def authenticate(
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=Auth.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = Auth.create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
-    )
+    access_token = Auth.create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
 
 
 @app.get("/users/me/", response_model=PydanticUser)
-async def read_users_me(
-        current_user: Current_Active_User
-):
+async def read_users_me(current_user: Current_Active_User):
     return current_user
 
 
 @app.get("/users/me/items/")
-async def read_own_items(
-        current_user: Current_Active_User
-):
+async def read_own_items(current_user: Current_Active_User):
     return [{"item_id": "Foo", "owner": current_user.username}]
 
 
@@ -132,7 +127,7 @@ async def records_list(request: Request, session: Session, endpoint: str):
     """
     model, endpoint_type = classify(endpoint)
     if model is None:
-        return Response(status_code = status.HTTP_404_NOT_FOUND)
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
     context: dict = {
         "request": request,
     }
@@ -173,7 +168,7 @@ async def new_record(request: Request, session: Session, endpoint: str):
                 first_name=form.get("first_name"),
                 last_name=form.get("last_name"),
                 year_level=form.get("year_level"),
-                house=form.get("house")
+                house=form.get("house"),
             )
         case _:
             return Response(status_code=status.HTTP_404_NOT_FOUND)
@@ -181,7 +176,9 @@ async def new_record(request: Request, session: Session, endpoint: str):
         await db.insert(session, model_instance)
     except IntegrityError:
         return Response(status_code=status.HTTP_409_CONFLICT)
-    return JSONResponse(content={"redirectUrl": f"/{endpoint}"}, status_code=status.HTTP_303_SEE_OTHER)
+    if endpoint_type == Endpoint.REGISTER:
+        return JSONResponse(content={"redirectUrl": f"/"}, status_code=status.HTTP_303_SEE_OTHER)
+    return JSONResponse(content={"redirectUrl": f"/{endpoint_type.value}"}, status_code=status.HTTP_303_SEE_OTHER)
 
 
 @app.patch("/{endpoint}/{identifier}", response_class=HTMLResponse)

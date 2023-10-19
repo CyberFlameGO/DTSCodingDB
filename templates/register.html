@@ -1,22 +1,12 @@
 {% extends 'base.html' %}
 
 {% block head %}
-    <script>
-        document.getElementById('submitNewUser').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            const response = await fetch(event.target.action, {
-                method: 'POST',
-                body: new FormData(this),
-            });
-            if (!response.ok && response.status === HTTP_409_CONFLICT) {
-                alert('You cannot add a user with an email or username that already exists in the database!');
-            } else if (response.ok) {
-                const data = await response.json();
-                const redirectUrl = data['redirectUrl'];
-                if (redirectUrl) {
-                    window.location.href = redirectUrl;
-                }
-            }
+    <script type = 'module'>
+        import ResourceManager from '../static/js/utils.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            ResourceManager.handleFormSubmission('submitNewUser',
+                'You cannot add a user with an email or username that already exists in the database!');
         });
     </script>
 {% endblock %}
@@ -26,22 +16,22 @@
 
     <form id = "submitNewUser" action = "/register" method = "post">
         <label for = "email">Email</label>
-        <input type = "email" id = "email" name = "email" required><br>
+        <input type = "email" id = "email" name = "email" autocomplete = 'email' required><br>
 
         <label for = "username">Username</label>
-        <input type = "text" id = "username" name = "username" required><br>
+        <input type = "text" id = "username" name = "username" autocomplete = 'username' required><br>
 
         <label for = "password">Password</label>
-        <input type = "password" id = "password" name = "password" required><br>
+        <input type = "password" id = "password" name = "password" autocomplete = 'new-password' required><br>
 
         <label for = "role">Role</label>
         <input type = "text" id = "role" name = "role" required><br>
 
         <label for = "first_name">First Name</label>
-        <input type = "text" id = "first_name" name = "first_name" required><br>
+        <input type = "text" id = "first_name" name = "first_name" autocomplete = 'given-name' required><br>
 
         <label for = "last_name">Last Name</label>
-        <input type = "text" id = "last_name" name = "last_name" required><br>
+        <input type = "text" id = "last_name" name = "last_name" autocomplete = 'family-name' required><br>
 
         <label for = "year_level">Year Level</label>
         <input type = "number" id = "year_level" name = "year_level"><br>
