@@ -4,7 +4,7 @@ from typing import Annotated, Type
 
 import sentry_sdk
 from fastapi import Depends, FastAPI, HTTPException, Request, status
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -80,8 +80,6 @@ async def home(request: Request):
     :param request:
     :return:
     """
-    for route in app.routes:
-        print(route)
     return templates.TemplateResponse(
         "index.html",
         {
@@ -183,7 +181,7 @@ async def new_record(request: Request, session: Session, endpoint: str):
         await db.insert(session, model_instance)
     except IntegrityError:
         return Response(status_code=status.HTTP_409_CONFLICT)
-    return RedirectResponse(f"/{endpoint}", status_code=status.HTTP_303_SEE_OTHER)
+    return JSONResponse(content={"redirectUrl": f"/{endpoint}"}, status_code=status.HTTP_303_SEE_OTHER)
 
 
 @app.patch("/{endpoint}/{identifier}", response_class=HTMLResponse)

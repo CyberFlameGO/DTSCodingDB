@@ -1,1 +1,32 @@
-{%  %}
+{% extends 'base.html' %}
+
+{% block head %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('userLogin').addEventListener('submit', function() {
+                fetch(this.action, {
+                    method: 'POST',
+                    body: new FormData(this),
+                }).then(function(response) {
+                    if (!response.ok) {
+                        alert('Invalid username or password!');
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+    <h1>User Login</h1>
+
+    <form id = "userLogin" action = "/login" method = "post">
+        <label for = "username">Username</label>
+        <input type = "text" id = "username" name = "username" required><br>
+
+        <label for = "password">Password</label>
+        <input type = "password" id = "password" name = "password" required><br>
+
+        <input type = "submit" value = "Login">
+    </form>
+{% endblock %}

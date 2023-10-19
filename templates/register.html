@@ -2,18 +2,21 @@
 
 {% block head %}
     <script>
-        document.addEventListener('DOMContentLoaded', (event) => {
-            const HTTP_409_CONFLICT = 409;
-            document.getElementById('submitNewUser').addEventListener('submit', function() {
-                fetch(event.target.action, {
-                    method: 'POST',
-                    body: new FormData(this),
-                }).then(function(response) {
-                    if (!response.ok && response.status === HTTP_409_CONFLICT) {
-                        alert('You cannot add a user with an email or username that already exists in the database!');
-                    }
-                });
+        document.getElementById('submitNewUser').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const response = await fetch(event.target.action, {
+                method: 'POST',
+                body: new FormData(this),
             });
+            if (!response.ok && response.status === HTTP_409_CONFLICT) {
+                alert('You cannot add a user with an email or username that already exists in the database!');
+            } else if (response.ok) {
+                const data = await response.json();
+                const redirectUrl = data['redirectUrl'];
+                if (redirectUrl) {
+                    window.location.href = redirectUrl;
+                }
+            }
         });
     </script>
 {% endblock %}
