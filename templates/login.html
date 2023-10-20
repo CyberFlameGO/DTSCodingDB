@@ -3,32 +3,26 @@
 {% block head %}
     <!--suppress JSCheckFunctionSignatures -->
     <script>
-        document.addEventListener('DOMContentLoaded', (event) => {
-            document.getElementById('userLogin').addEventListener('submit', function (event) {
-                // noinspection JSCheckFunctionSignatures
-                fetch('/token', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: new URLSearchParams(new FormData(this)),
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data['access_token']) {
-                            // Handle the received token here, e.g., save it to local storage for future use
-                            localStorage.setItem('token', data['access_token']);
-                            window.location.href = '/';
-                        } else {
-                            alert('Invalid username or password!');
-                            // todo: handle server properly - correct login displays this
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                        alert('An error occurred. Please try again.');
-                    });
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('userLogin').addEventListener('submit', async function (event) {
                 event.preventDefault();
+                try {
+                    const response = await fetch('/token', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams(new FormData(this)),
+                    });
+                    if (response.ok) {
+                        window.location.href = '/';
+                    } else {
+                        alert('Invalid username or password!');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('An error occurred. Please try again.');
+                }
             });
         });
     </script>

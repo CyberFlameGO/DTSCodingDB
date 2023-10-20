@@ -60,10 +60,10 @@ export default class ResourceManager {
             });
     }
 
-    static async sendRequest(url, httpMethod, body) {
+    static async sendRequest(url, httpMethod, body, headers) {
         const options = {
             method: httpMethod,
-            headers: {},
+            headers: headers,
         };
 
         if (body instanceof FormData) {
@@ -72,7 +72,8 @@ export default class ResourceManager {
             options.body = JSON.stringify(body);
             options.headers['Content-Type'] = 'application/json';
         }
-
+        console.log(JSON.stringify(options));
+        console.log(JSON.stringify(headers));
         return await fetch(url, options);
     }
 
@@ -82,7 +83,7 @@ export default class ResourceManager {
         const url = `${resourceURL}/${resourceId}`;
 
         // define headers if token is available
-        const headers = token ? {Authorization: `Bearer ${token}`} : null;
+        const headers = token ? { Authorization: `Bearer ${token}` } : null;
 
         try {
             result = await this.sendRequest(
@@ -104,7 +105,7 @@ export default class ResourceManager {
         const url = `${resourceURL}/${resourceId}`;
 
         // define headers if token is available
-        const headers = token ? {Authorization: `Bearer ${token}`} : null;
+        const headers = token ? { Authorization: `Bearer ${token}` } : null;
 
         try {
             res = await this.sendRequest(url, 'DELETE', null, headers); // pass headers as a parameter

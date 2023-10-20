@@ -13,7 +13,7 @@ from utils import Database
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-def get_authdata(token: Annotated[str, Depends(oauth2_scheme)]):
+def get_authdata(token: str):
     try:
         payload = jwt.decode(token, Auth.SECRET_KEY, algorithms=[Auth.ALGORITHM])
         username: str = payload.get("sub")
@@ -50,7 +50,7 @@ class Auth(object):
         return cls.pwd_context.hash(password)
 
     @staticmethod
-    async def get_user(session, username: str):
+    async def get_user_object(session, username: str):
         data = await Database.retrieve_by_field(session, User, User.username, username)
         if data:
             data_dict = data.__dict__
@@ -59,7 +59,7 @@ class Auth(object):
 
     @classmethod
     async def authenticate_user(cls, session, username: str, password: str):
-        user = await cls.get_user(session, username)
+        user = await cls.get_user_object(session, username)
         if not user:
             return False
         if not cls.verify_password(password, user.password):

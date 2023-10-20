@@ -1,6 +1,6 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from enum import Enum
-from typing import Annotated, Type
+from typing import Annotated, Optional, Type
 
 import sentry_sdk
 from fastapi import Depends, FastAPI, HTTPException, Request, status
@@ -10,10 +10,12 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
 import models
 import utils
-from models import Base, MatchPlayers, MatchResult, Token, User
+from models import Base, Match, MatchPlayers, MatchResult, Token, User
 
 sentry_sdk.init(
     dsn="https://eebca21dd9c9418cbfe83e7b8a0976de@o317122.ingest.sentry.io/4504873492480000",
@@ -41,6 +43,7 @@ class Endpoint(Enum):
 
     GAMES = "games"
     MATCH = "match"
+    NEW_MATCH = "new_match"
     LOGIN = "login"
     REGISTER = "register"
 
@@ -57,13 +60,14 @@ class Roles(Enum):
 
 async def get_user(session, token: str):
     data = utils.get_authdata(token)
-    user = await Auth.get_user(session, username=data.username)
+    user = await Auth.get_user_object(session, username=data.username)
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    print(user)
     return user
 
 
@@ -84,7 +88,7 @@ def classify_endpoint(to_classify: Endpoint | str) -> tuple[Type[Base] | None, E
             return models.Game, subject
         case Endpoint.LOGIN | Endpoint.REGISTER:
             return models.User, subject
-        case Endpoint.MATCH:
+        case Endpoint.MATCH | Endpoint.NEW_MATCH:
             return models.Match, subject
         case _:
             return None, status.HTTP_404_NOT_FOUND
@@ -157,7 +161,7 @@ async def authenticate(
         )
     access_token_expires = timedelta(minutes=Auth.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = Auth.create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
-    response = RedirectResponse(url="/")
+    response = RedirectResponse(url="/", status_code=status.HTTP_200_OK)
     response.set_cookie(
         key="access_token", value=access_token, expires=int(access_token_expires.total_seconds())
     )  # insecure but this program would need a
@@ -216,6 +220,40 @@ async def auth_needed(request: Request):
     )
 
 
+@app.get("/match/{match_id}", response_class=HTMLResponse)
+async def match(request: Request, session: Session, match_id: int):
+    """
+    Match page
+    :param match_id:
+    :param session:
+    :param request:
+    :return:
+    """
+    token = request.cookies.get("access_token")
+    if not token:
+        return RedirectResponse(url="/auth_needed")
+    user = await get_user(session, token)
+    if match_id is None:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+    row_stmt = (
+        select(Match)
+        .filter_by(id=match_id)
+        .options(
+            joinedload(Match.players).joinedload(MatchPlayers.player),
+            joinedload(Match.results).joinedload(MatchResult.won),
+        )
+    )
+    row = (await session.execute(row_stmt)).unique().scalar_one_or_none()
+    return templates.TemplateResponse(
+        "match.html",
+        {
+            "request": request,
+            "match": row.__dict__,
+            "editing_stick": True if user.role == Roles.TEACHER.value else False,
+        },
+    )
+
+
 @app.get("/{endpoint}", response_class=HTMLResponse)
 async def records_list(request: Request, session: Session, endpoint: str):
     """
@@ -231,6 +269,7 @@ async def records_list(request: Request, session: Session, endpoint: str):
     user = await get_user(session, token)
 
     model, endpoint_type = classify_endpoint(endpoint)
+    print(model, endpoint_type)
     if model is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     context: dict = {
@@ -240,7 +279,7 @@ async def records_list(request: Request, session: Session, endpoint: str):
         case Endpoint.GAMES:
             context["games"] = await db.dump_all(session, model)
             if user.role == Roles.TEACHER.value:
-                context["editing_stick"] = True  # you've met the talking stick, get ready for the editing stick.
+                context["editing_stick"] = True  #
         case _:
             pass
     return templates.TemplateResponse(
@@ -250,7 +289,9 @@ async def records_list(request: Request, session: Session, endpoint: str):
 
 
 @app.post("/{endpoint}", response_class=HTMLResponse)
-async def new_record(request: Request, session: Session, endpoint: str):
+async def new_record(
+    request: Request, session: Session, endpoint: str, token: Annotated[str, Depends(utils.oauth2_scheme)]
+):
     """
     New game page
     :param user:
@@ -260,25 +301,28 @@ async def new_record(request: Request, session: Session, endpoint: str):
     :param session:
     :return:
     """
-    # This code gets the form data from the request
-    authorization = request.headers.get("Authorization")
-    print(authorization)
-    scheme, param = Auth.get_authorization_scheme_param(authorization)  # todo: get token sent properly and refer to
-    # todo: prior commit for depends if that works - this implementation just ditches the 401 from oauth2_scheme
-    print(scheme, param)
-    user = object  # await get_user(session, param)
+
+    user = await get_user(session, token)
     form = await request.form()
     print(form)
     model, endpoint_type = classify_endpoint(endpoint)
     match endpoint_type:
         case Endpoint.GAMES:
+            if user.role != Roles.TEACHER.value:
+                return Response(status_code=status.HTTP_403_FORBIDDEN)
             model_instance = model(name=form.get("name"), description=form.get("description"))
         case Endpoint.MATCH:
+            print("match")
             winner = await db.retrieve_by_field(session, User, User.username, form.get("winner"))
             loser = await db.retrieve_by_field(session, User, User.username, form.get("loser"))
+            print("wl")
+            played_at = None
+            if form.get("played_at"):
+                played_at = datetime.strptime(form.get("played_at"), "%Y-%m-%dT%H:%M")
             model_instance = model(
+                game_id=2,  # form.get("game_id"),
                 creator_id=user.id,  # TODO: get user id from token
-                played_at=form.get("played_at") if form.get("played_at") else None,
+                played_at=played_at,
                 players={
                     MatchPlayers(
                         player_id=winner.id,
@@ -287,12 +331,19 @@ async def new_record(request: Request, session: Session, endpoint: str):
                 },
                 results=MatchResult(won_id=winner.id, lost_id=loser.id),
             )
+            print(model.__dict__)
+
         case _:
             return Response(status_code=status.HTTP_404_NOT_FOUND)
     try:
         await db.insert(session, model_instance)
     except IntegrityError:
         return Response(status_code=status.HTTP_409_CONFLICT)
+    if endpoint_type == Endpoint.MATCH:
+        return JSONResponse(
+            content={"redirectUrl": f"/{endpoint_type.value}?identifier={model_instance.id}"},
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
     return JSONResponse(content={"redirectUrl": f"/{endpoint_type.value}"}, status_code=status.HTTP_303_SEE_OTHER)
 
 

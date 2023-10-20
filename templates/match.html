@@ -1,10 +1,26 @@
 {% extends 'base.html' %}
+
+{% block head %}
+    <style>
+        ul {
+            padding-left: 50px;
+        }
+    </style>
+{% endblock %}
+
 {% block content %}
-    <h1>Match information for #{{ match }}</h1>
+    <h1>Match information for #{{ match.id }}</h1>
     <ul>
         <li>Match ID: {{ match.id }}</li>
-        <li>Players: {{ match.players }}</li>
-        <li>Winner: {{ match.winner }}</li>
-        <li>: {{ match.start_time }}</li>
+        <li>Players:
+            <ul>
+                {% for player in match.players %}
+                    <li>{{ player.player.username }}</li>
+                {% endfor %}
+            </ul>
+        </li>
+
+        <li>Winner: {{ match.results.won.username }}</li>
+        <li>Played on (UTC time): {{ match.played_at.strftime('%d %B, %Y at (approximately) %-I:%M%p') }} </li>
     </ul>
 {% endblock %}

@@ -4,9 +4,12 @@
     <script type = 'module'>
         import ResourceManager from '../static/js/utils.js';
 
+        const auth_token = ResourceManager.getCookie('access_token');
+
         document.addEventListener('DOMContentLoaded', () => {
             ResourceManager.handleFormSubmission('submitNewMatch',
-                'You cannot add a match that already exists! You must assign unique and appropriate properties for a match.');
+                'You cannot add a match that already exists! ' +
+                'You must assign unique and appropriate properties for a match.', auth_token);
         });
     </script>
 {% endblock %}
@@ -14,17 +17,17 @@
 {% block content %}
     <h1>Add Game Match</h1>
 
-    <form id = "submitNewMatch" action = "/matches/add" method = "post">
+    <form id = "submitNewMatch" action = "/match" method = "post">
 
         <label for = "played_at">Played At: </label>
         <input type = "datetime-local" id = "played_at" name = "played_at"><br>
 
 
-        <label for = "won_id">Winning Player username</label>
-        <input type = "text" id = "won_id" name = "won_id"><br>
+        <label for = "winner">Winning Player username</label>
+        <input type = "text" id = "winner" name = "winner"><br>
 
-        <label for = "lost_id">Losing Player username</label>
-        <input type = "text" id = "lost_id" name = "lost_id"><br>
+        <label for = "loser">Losing Player username</label>
+        <input type = "text" id = "loser" name = "loser"><br>
 
         <input type = "submit" value = "Add Match">
     </form>

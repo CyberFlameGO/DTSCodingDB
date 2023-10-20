@@ -18,8 +18,6 @@ class Database(object):
     Database class for SQLite3.
     Record and row are used interchangeably as well as SQL terms being used interchangeably
      with object terms, where it sounds more natural.
-    Transactions are used for mutations to the database, but aren't deemed necessary (considering the use case) for
-     accessing data, and no situation where they would be useful is likely to arise in the program.
     TODO: Potentially make a variable for table creation query
     """
 
@@ -71,18 +69,19 @@ class Database(object):
         :param model:
         :return:
         """
-        async with session.begin():
-            try:
-                session.add(model)
-            except IntegrityError:
-                await session.rollback()
-                raise  # re-raise
-            except SQLAlchemyError:
-                await session.rollback()
-                raise  # re-raise
-            except Exception as e:
-                await session.rollback()
-                raise DatabaseError(f"Exception encountered whilst executing: {e}")
+        try:
+            session.add(model)
+            await session.commit()
+            return
+        except IntegrityError:
+            await session.rollback()
+            raise  # re-raise
+        except SQLAlchemyError:
+            await session.rollback()
+            raise  # re-raise
+        except Exception as e:
+            await session.rollback()
+            raise DatabaseError(f"Exception encountered whilst executing: {e}")
 
     @staticmethod
     async def update(session: AsyncSession, model: Type[Base], identifier: int, data: dict):
@@ -94,19 +93,18 @@ class Database(object):
         :param identifier:
         :return:
         """
-        async with session.begin():
-            try:
-                statement = update(model).where(model.id == identifier).values(data)
-                await session.execute(statement)
-            except IntegrityError:
-                await session.rollback()
-                raise  # re-raise
-            except SQLAlchemyError:
-                await session.rollback()
-                raise  # re-raise
-            except Exception as e:
-                await session.rollback()
-                raise DatabaseError(f"Exception encountered whilst executing: {e}")
+        try:
+            statement = update(model).where(model.id == identifier).values(data)
+            await session.execute(statement)
+        except IntegrityError:
+            await session.rollback()
+            raise  # re-raise
+        except SQLAlchemyError:
+            await session.rollback()
+            raise  # re-raise
+        except Exception as e:
+            await session.rollback()
+            raise DatabaseError(f"Exception encountered whilst executing: {e}")
 
     @staticmethod
     async def retrieve(session: AsyncSession, model: base_type, identifier: int) -> base_type:
@@ -174,16 +172,15 @@ class Database(object):
         :param identifier:
         :return:
         """
-        async with session.begin():
-            try:
-                statement = delete(model).where(model.id == identifier)
-                await session.execute(statement)
-            except SQLAlchemyError:
-                await session.rollback()
-                raise  # re-raise
-            except Exception as e:
-                await session.rollback()
-                raise DatabaseError(f"Exception encountered whilst executing: {e}")
+        try:
+            statement = delete(model).where(model.id == identifier)
+            await session.execute(statement)
+        except SQLAlchemyError:
+            await session.rollback()
+            raise  # re-raise
+        except Exception as e:
+            await session.rollback()
+            raise DatabaseError(f"Exception encountered whilst executing: {e}")
 
     @staticmethod
     async def has_existed(session: AsyncSession, model: base_type, identifier: int) -> bool:

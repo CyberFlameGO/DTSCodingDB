@@ -31,14 +31,14 @@ class User(Base):
 
     email: Mapped[str] = mapped_column(unique=True, nullable=False)
     username: Mapped[str] = mapped_column(unique=True, nullable=False)
-    password: Mapped[str] = mapped_column(unique=True, nullable=False)
+    password: Mapped[str] = mapped_column(nullable=False)
     role: Mapped[str] = mapped_column(nullable=False)
-    first_name: Mapped[str] = mapped_column(nullable = False)
-    last_name: Mapped[str] = mapped_column(nullable = False)
-    year_level: Mapped[int] = mapped_column(nullable = True)
-    house: Mapped[str] = mapped_column(nullable = False)
+    first_name: Mapped[str] = mapped_column(nullable=False)
+    last_name: Mapped[str] = mapped_column(nullable=False)
+    year_level: Mapped[int] = mapped_column(nullable=True)
+    house: Mapped[str] = mapped_column(nullable=False)
 
-    created_at: Mapped[datetime] = mapped_column(default=datetime.now(tz = UTC))
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now(tz=UTC))
 
     creator: Mapped[Set["Match"]] = relationship()
     player: Mapped[Set["MatchPlayers"]] = relationship(back_populates="player")
@@ -48,10 +48,10 @@ class Match(Base):
     __tablename__: str = "matches"
 
     game_id: Mapped[int] = mapped_column(ForeignKey("games.id"), nullable=False)
-    played_at: Mapped[datetime] = mapped_column(default=datetime.now(tz = UTC))
+    played_at: Mapped[datetime] = mapped_column(default=datetime.now(tz=UTC))
 
     creator_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(default=datetime.now(tz = UTC))
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now(tz=UTC))
     players: Mapped[Set["MatchPlayers"]] = relationship(back_populates="match")
     results: Mapped["MatchResult"] = relationship(back_populates="match")
 

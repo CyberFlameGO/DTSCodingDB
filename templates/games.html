@@ -5,10 +5,11 @@
         import ResourceManager from '../static/js/utils.js';
 
         let editedGameId = null;
-        const auth_token = ResourceManager.getCookie('auth_token');
+        const auth_token = ResourceManager.getCookie('access_token');
         const HTTP_409_CONFLICT = 409;
         const HTTP_404_NOT_FOUND = 404;
         const HTTP_410_GONE = 410;
+        console.log(auth_token);
 
         window.editGame = async function editGame (id) {
             if (id) {

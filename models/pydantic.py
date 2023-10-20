@@ -5,6 +5,7 @@ from pydantic import BaseModel
 # SQLModel would reduce the duplicated code greatly here and follow DRY, but it isn't compatible with my versions of
 # SQLAlchemy and Pydantic - there isn't much I can do to reduce it easily, but it is worth noting.
 class PydanticUser(BaseModel):
+    id: int
     email: str
     username: str
     role: str
@@ -13,7 +14,7 @@ class PydanticUser(BaseModel):
     year_level: int
     house: str
 
-    created_at: datetime = datetime.now(tz = UTC)
+    created_at: datetime = datetime.now(tz=UTC)
 
 
 class Token(BaseModel):
