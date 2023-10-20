@@ -19,14 +19,20 @@
 
     <form id = "submitNewMatch" action = "/match" method = "post">
 
-        <label for = "played_at">Played At: </label>
+        <label for = "game">Choose a game:</label>
+        <select name = "game" id = "game">
+            {% for game in games %}
+                <option value = "{{ game.id }}">{{ game.name }}</option>
+            {% endfor %}
+        </select><br>
+
+        <label for = "played_at">Played at: </label>
         <input type = "datetime-local" id = "played_at" name = "played_at"><br>
 
-
-        <label for = "winner">Winning Player username</label>
+        <label for = "winner">Winning player username</label>
         <input type = "text" id = "winner" name = "winner"><br>
 
-        <label for = "loser">Losing Player username</label>
+        <label for = "loser">Losing player username</label>
         <input type = "text" id = "loser" name = "loser"><br>
 
         <input type = "submit" value = "Add Match">

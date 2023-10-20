@@ -6,12 +6,75 @@
             padding-left: 50px;
         }
     </style>
+    <script type = "module">
+        import ResourceManager from '../static/js/utils.js';
+
+        let editedMatchId = null;
+        const auth_token = ResourceManager.getCookie('access_token');
+        const HTTP_409_CONFLICT = 409;
+        const HTTP_404_NOT_FOUND = 404;
+        const HTTP_410_GONE = 410;
+
+        window.editMatch = async function editMatch (id) {
+            if (id) {
+                editedMatchId = id;
+                document.getElementById('edit_form' + id).style.display = 'inline';
+            }
+        };
+
+        window.submitChanges = async function submitChanges (id) {
+            const field = document.getElementById('selector' + id).value;
+            const value = document.getElementById('edit' + id).value;
+            let updatedMatch = {};
+            // Added Match ID and Played At fields
+            if (field === 'Winner') {
+                updatedMatch.winner = value;
+            } else if (field === 'Match ID') {
+                updatedMatch.matchId = value;
+            } else if (field === 'Played At (UTC time)') {
+                updatedMatch.playedAt = value;
+            }
+
+            const response = await ResourceManager.editResource(id, updatedMatch, '/matches', auth_token);
+
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                switch (response.status) {
+                    case HTTP_409_CONFLICT:
+                        alert('Conflict error!');
+                        break;
+                    case HTTP_404_NOT_FOUND:
+                        alert('The match does not exist in the database.');
+                        break;
+                    case HTTP_410_GONE:
+                        alert('The match has been deleted and no longer exists in the database.');
+                        break;
+                    default:
+                        alert('An unknown error occurred');
+                }
+            }
+
+            document.getElementById('edit_form' + id).style.display = 'none';
+        };
+
+        window.deleteMatch = async function (id) {
+            if (confirm('Are you sure?')) {
+                const response = await ResourceManager.deleteResource(id, '/matches', auth_token);
+                if (response.ok) {
+                    window.location.reload();
+                }
+            }
+        };
+    </script>
 {% endblock %}
 
 {% block content %}
+    TODO: ADD GAME AND ADD NOTE SAYING YOU CAN'T EDIT PLAYERS SO USERS SHOULD RECREATE MATCH
     <h1>Match information for #{{ match.id }}</h1>
     <ul>
         <li>Match ID: {{ match.id }}</li>
+        <li>Game: {{ match.game.name }}</li>
         <li>Players:
             <ul>
                 {% for player in match.players %}
@@ -19,8 +82,23 @@
                 {% endfor %}
             </ul>
         </li>
-
         <li>Winner: {{ match.results.won.username }}</li>
         <li>Played on (UTC time): {{ match.played_at.strftime('%d %B, %Y at (approximately) %-I:%M%p') }} </li>
     </ul>
+    {% if editing_stick %}
+        <button onclick = "editMatch({{ match.id }})" type = "button">Edit</button>
+        <button onclick = "deleteMatch({{ match.id }})" type = "button">Delete</button>
+        <span id = "edit_form{{ match.id }}" style = "display: none;">
+            <label for = "selector{{ match.id }}">Choose field:</label>
+            <select id = "selector{{ match.id }}">
+                <!-- Added options Match ID and Played at -->
+                <option value = "Winner">Winner</option>
+                <option value = "Match ID">Match ID</option>
+                <option value = "Played At (UTC time)">Played At (UTC Time)</option>
+            </select>
+            <label for = "edit{{ match.id }}">New value:</label>
+            <input type = "text" id = "edit{{ match.id }}" />
+            <button id = "submit{{ match.id }}" onclick = "submitChanges({{ match.id }})">Submit</button>
+        </span>
+    {% endif %}
 {% endblock %}

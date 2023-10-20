@@ -189,21 +189,6 @@ async def register(request: Request, session: Session):
     return JSONResponse(content={"redirectUrl": "/"}, status_code=status.HTTP_303_SEE_OTHER)
 
 
-@app.get("/login", response_class=HTMLResponse)
-async def login(request: Request):
-    """
-    Login page
-    :param request:
-    :return:
-    """
-    return templates.TemplateResponse(
-        "login.html",
-        {
-            "request": request,
-        },
-    )
-
-
 @app.get("/auth_needed", response_class=HTMLResponse)
 async def auth_needed(request: Request):
     """
@@ -244,11 +229,13 @@ async def match(request: Request, session: Session, match_id: int):
         )
     )
     row = (await session.execute(row_stmt)).unique().scalar_one_or_none()
+    games = await db.dump_all(session, models.Game)
     return templates.TemplateResponse(
         "match.html",
         {
             "request": request,
             "match": row.__dict__,
+            "games": games,
             "editing_stick": True if user.role == Roles.TEACHER.value else False,
         },
     )
@@ -263,13 +250,19 @@ async def records_list(request: Request, session: Session, endpoint: str):
     :param request:
     :return:
     """
-    token = request.cookies.get("access_token")
-    if not token:
-        return RedirectResponse(url="/auth_needed")
-    user = await get_user(session, token)
 
     model, endpoint_type = classify_endpoint(endpoint)
     print(model, endpoint_type)
+
+    token = request.cookies.get("access_token")
+    if not token:
+        if endpoint_type == Endpoint.LOGIN:
+            return templates.TemplateResponse("login.html", {"request": request})
+        elif endpoint_type == Endpoint.REGISTER:
+            return templates.TemplateResponse("register.html", {"request": request})
+        return RedirectResponse(url="/auth_needed")
+    user = await get_user(session, token)
+
     if model is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     context: dict = {
@@ -279,7 +272,9 @@ async def records_list(request: Request, session: Session, endpoint: str):
         case Endpoint.GAMES:
             context["games"] = await db.dump_all(session, model)
             if user.role == Roles.TEACHER.value:
-                context["editing_stick"] = True  #
+                context["editing_stick"] = True
+        case Endpoint.NEW_MATCH:
+            context["games"] = await db.dump_all(session, models.Game)
         case _:
             pass
     return templates.TemplateResponse(
@@ -288,7 +283,7 @@ async def records_list(request: Request, session: Session, endpoint: str):
     )
 
 
-@app.post("/{endpoint}", response_class=HTMLResponse)
+@app.post("/{endpoint}", response_class=JSONResponse)
 async def new_record(
     request: Request, session: Session, endpoint: str, token: Annotated[str, Depends(utils.oauth2_scheme)]
 ):
@@ -315,12 +310,12 @@ async def new_record(
             print("match")
             winner = await db.retrieve_by_field(session, User, User.username, form.get("winner"))
             loser = await db.retrieve_by_field(session, User, User.username, form.get("loser"))
-            print("wl")
             played_at = None
             if form.get("played_at"):
                 played_at = datetime.strptime(form.get("played_at"), "%Y-%m-%dT%H:%M")
+            print(form.get("game"), user.id, played_at, winner.id, loser.id)
             model_instance = model(
-                game_id=2,  # form.get("game_id"),
+                game_id=form.get("game"),
                 creator_id=user.id,  # TODO: get user id from token
                 played_at=played_at,
                 players={
@@ -347,7 +342,7 @@ async def new_record(
     return JSONResponse(content={"redirectUrl": f"/{endpoint_type.value}"}, status_code=status.HTTP_303_SEE_OTHER)
 
 
-@app.patch("/{endpoint}/{identifier}", response_class=HTMLResponse)
+@app.patch("/{endpoint}/{identifier}", response_class=Response)
 async def update_record(request: Request, session: Session, identifier: int, endpoint: str):
     """
     Update game page
@@ -377,7 +372,7 @@ async def update_record(request: Request, session: Session, identifier: int, end
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@app.delete("/{endpoint}/{identifier}", response_class=HTMLResponse)
+@app.delete("/{endpoint}/{identifier}", response_class=Response)
 async def delete_game(request: Request, session: Session, identifier: int, endpoint: str):
     """
     Route for game record deletion - does not check if the game exists before deletion
@@ -410,17 +405,7 @@ async def leaderboard(request: Request, session: Session):
     )
 
 
-@app.get("/matches/{id}", response_class=HTMLResponse)
-async def get_match(request: Request, match_id: int, session: Session):
-    """
-    :param session:
-    :param request:
-    :param match_id:
-    :return:
-    """
-    try:
-        match = await db.retrieve(session, models.Match, match_id)
-    except NoResultFound:
-        # TODO: adjust with a proper page regarding no match found with id
-        return Response(status_code=status.HTTP_404_NOT_FOUND)
-    return templates.TemplateResponse("matches.html", {"request": request, "id": match_id, "match": match})
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0")

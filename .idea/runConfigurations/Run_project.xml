@@ -1,5 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Run project" type="Python.FastAPI">
+    <option name="additionalOptions" value="--reload --host 0.0.0.0" />
     <option name="file" value="$PROJECT_DIR$/app.py" />
     <module name="DTSCodingDB" />
     <option name="INTERPRETER_OPTIONS" value="" />

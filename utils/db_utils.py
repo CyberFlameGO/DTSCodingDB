@@ -52,6 +52,7 @@ class Database(object):
         TODO: see https://fastapi.tiangolo.com/tutorial/dependencies/dependencies-with-yield/
          and https://fastapi.tiangolo.com/tutorial/dependencies/#what-is-dependency-injection
         """
+
         try:
             async with self.LocalSession() as session:
                 # self.sessions.append(session)
@@ -59,7 +60,8 @@ class Database(object):
         except SQLAlchemyError as e:
             raise DatabaseError(f"Error getting session: {e}")
         finally:
-            await session.close()
+            if session:
+                await session.close()
 
     @staticmethod
     async def insert(session: AsyncSession, model: Base):
