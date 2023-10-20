@@ -1,9 +1,18 @@
 {% extends 'base.html' %}
-{% block pageheading %}
-    menu
+{% block head %}
+    <style>
+        ul {
+            padding-left: 50px;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
     <h1>Home</h1>
     <p>This is the homepage — use the navigation bar on the left to visit the rest of the site</p>
+    <ul>
+        {% for game_name, count in game_plays %}
+            <li><u>Game</u>: <strong>{{ game_name }}</strong>, <u>Matches</u>: <em>{{ count }}</em></li>
+        {% endfor %}
+    </ul>
 {% endblock %}

@@ -1,8 +1,17 @@
 {% extends 'base.html' %}
+{% block head %}
+    <style>
+        ol {
+            padding-left: 50px;
+        }
+    </style>
+{% endblock %}
 {% block content %}
     <h1>Leaderboard</h1>
     <p>This is the leaderboard</p>
-    {% for user in users %}
-        <p>{{ user.username }}: {{ user.score }}</p>
-    {% endfor %}
+    <ol>
+        {% for entry in data %}
+            <li><strong>{{ entry.user }}</strong>: <em>{{ entry.wins }}</em></li>
+        {% endfor %}
+    </ol>
 {% endblock %}

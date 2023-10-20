@@ -21,7 +21,7 @@ class Base(AsyncAttrs, DeclarativeBase):
 class Game(Base):
     __tablename__: str = "games"
 
-    match: Mapped[Set["Match"]] = relationship(backref="game")
+    match: Mapped[Set["Match"]] = relationship()
     name: Mapped[str] = mapped_column(nullable=False, unique=True)
     description: Mapped[str] = mapped_column(nullable=False)
 

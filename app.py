@@ -10,12 +10,12 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func, join
 from sqlalchemy.orm import joinedload
 
 import models
 import utils
-from models import Base, Match, MatchPlayers, MatchResult, Token, User
+from models import Base, Game, Match, MatchPlayers, MatchResult, Token, User
 
 sentry_sdk.init(
     dsn="https://eebca21dd9c9418cbfe83e7b8a0976de@o317122.ingest.sentry.io/4504873492480000",
@@ -46,6 +46,7 @@ class Endpoint(Enum):
     NEW_MATCH = "new_match"
     LOGIN = "login"
     REGISTER = "register"
+    LEADERBOARD = "leaderboard"
 
 
 class Roles(Enum):
@@ -139,11 +140,17 @@ async def home(request: Request, session: Session):
     if token:
         val = await get_user(session, token)
         print(val.role)
+    statement = (
+        select(Game.name, func.count(Match.game_id).label("matches"))
+        .select_from(join(Match, Game, Match.game_id == Game.id))
+        .group_by(Game.name)
+        .order_by(func.count(Match.game_id).desc())
+    )
+    executed = await session.execute(statement)
+    game_plays = executed.all()
     return templates.TemplateResponse(
         "index.html",
-        {
-            "request": request,
-        },
+        {"request": request, "game_plays": game_plays},
     )
 
 
@@ -229,15 +236,41 @@ async def match(request: Request, session: Session, match_id: int):
         )
     )
     row = (await session.execute(row_stmt)).unique().scalar_one_or_none()
+    if row is None:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+    game = await db.retrieve(session, models.Game, row.game_id)
+    print(game.__dict__)
     games = await db.dump_all(session, models.Game)
     return templates.TemplateResponse(
         "match.html",
         {
             "request": request,
             "match": row.__dict__,
+            "game_name": game.name,
             "games": games,
             "editing_stick": True if user.role == Roles.TEACHER.value else False,
         },
+    )
+
+
+@app.get("/leaderboard", response_class=HTMLResponse)
+async def get_leaderboard(request: Request, session: Session):
+    """
+    Leaderboard page
+    :param session:
+    :param request:
+    :return:
+    """
+    leaderboard = await db.dump_by_field_descending(session, MatchResult.won_id, "wins")
+    leaderboard_data = []
+    for user_won_id, wins in leaderboard:
+        select_statement = select(User.username).where(User.id == user_won_id)
+        result = await session.execute(select_statement)
+        username = result.scalars().first()
+        leaderboard_data.append({"user": username, "wins": wins})
+    return templates.TemplateResponse(
+        "leaderboard.html",
+        {"request": request, "data": leaderboard_data},
     )
 
 
@@ -289,7 +322,6 @@ async def new_record(
 ):
     """
     New game page
-    :param user:
     :param token:
     :param endpoint:
     :param request:
@@ -331,12 +363,12 @@ async def new_record(
         case _:
             return Response(status_code=status.HTTP_404_NOT_FOUND)
     try:
-        await db.insert(session, model_instance)
+        new_record_id = await db.insert(session, model_instance)
     except IntegrityError:
         return Response(status_code=status.HTTP_409_CONFLICT)
     if endpoint_type == Endpoint.MATCH:
         return JSONResponse(
-            content={"redirectUrl": f"/{endpoint_type.value}?identifier={model_instance.id}"},
+            content={"redirectUrl": f"/{endpoint_type.value}/{new_record_id}"},
             status_code=status.HTTP_303_SEE_OTHER,
         )
     return JSONResponse(content={"redirectUrl": f"/{endpoint_type.value}"}, status_code=status.HTTP_303_SEE_OTHER)
@@ -388,24 +420,3 @@ async def delete_game(request: Request, session: Session, identifier: int, endpo
     print(form)
     await db.remove_record(session, model, identifier)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-@app.get("/leaderboard", response_class=HTMLResponse)
-async def leaderboard(request: Request, session: Session):
-    """
-    Leaderboard page
-    :param session:
-    :param request:
-    :return:
-    """
-    rankings = await db.dump_by_field_descending(session, models.MatchResult.won_id, "wins", 10)
-    return templates.TemplateResponse(
-        "leaderboard.html",
-        {"request": request, "users": utils.get_users()},
-    )
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0")

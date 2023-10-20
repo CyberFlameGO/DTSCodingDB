@@ -38,8 +38,13 @@
         <ul>
             <!-- this is written manually in case pages are added that aren't meant to be user-facing -->
             <li><a href = "/">Home</a></li>
+            <li><a href = '/leaderboard'>Leaderboard</a</li>
             <li><a href = "/games">Games</a></li>
+            <li><a href = '/login'>Log In</a></li>
             <li><a href = "/register">Register</a></li>
+            <!-- This would be hidden usually but the base is extended by unauthenticated endpoints,
+            and javascript checks are not the best idea for this type of thing-->
+            <li><a href = '/new_match'>(Leaders/Teachers only) Insert a new match</a></li>
         </ul>
     </nav>
 

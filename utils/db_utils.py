@@ -73,8 +73,10 @@ class Database(object):
         """
         try:
             session.add(model)
+            await session.flush()
+            model_id = model.id
             await session.commit()
-            return
+            return model_id
         except IntegrityError:
             await session.rollback()
             raise  # re-raise
@@ -177,6 +179,7 @@ class Database(object):
         try:
             statement = delete(model).where(model.id == identifier)
             await session.execute(statement)
+            await session.commit()
         except SQLAlchemyError:
             await session.rollback()
             raise  # re-raise
