@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block head %}
     <style>
-        ul {
+        .list ul {
             padding-left: 50px;
         }
     </style>
@@ -9,10 +9,32 @@
 
 {% block content %}
     <h1>Home</h1>
-    <p>This is the homepage — use the navigation bar on the left to visit the rest of the site</p>
-    <ul>
-        {% for game_name, count in game_plays %}
-            <li><u>Game</u>: <strong>{{ game_name }}</strong>, <u>Matches</u>: <em>{{ count }}</em></li>
-        {% endfor %}
-    </ul>
+    <p>This is the homepage — use the navigation bar on the left to visit the rest of the site!</p>
+    <p>To see details for a specific match, you can go to (this page's URL)/match/(match id).</p>
+    <p>There is no index of all matches for obscurity reasons</p>
+    <br>
+    {% if user %}
+        <p>Hi there {{ user.first_name }} {{ user.last_name }} of the {{ user.house|title }} house!</p>
+        <p>You are a <strong>{{ user.role }}</strong>, currently logged in as {{ user.username }}.</p>
+        <br>
+        {% if user_total_plays %}
+            <p>Your statistics:</p>
+            <ul class = 'list'>
+                <li>Your match plays: <strong>{{ user_total_plays }}</strong></li>
+                {% if user_total_wins %}
+                    <li>Your match wins: <strong>{{ user_total_wins }}</strong></li>
+                {% endif %}
+            </ul>
+        {% endif %}
+    {% endif %}
+    <br>
+    {% if game_plays %}
+        <p>Site-wide game statistics, ordered by amount of matches descending</p>
+        <ul>
+            {% for game_name, count in game_plays %}
+                <li class = 'list'><u>Game</u>: <em>{{ game_name }}</em>, <u>Matches</u>: <strong>{{ count }}</strong>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 {% endblock %}

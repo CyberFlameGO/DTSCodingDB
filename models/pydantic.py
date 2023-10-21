@@ -1,3 +1,9 @@
+"""
+Pydantic models. Code can't reasonably be reduced here - SQLModel (library) would've been an ideal candidate but as
+said elsewhere in the code (in a different file) in the project, it isn't compatible with my versions of
+SQLAlchemy and Pydantic.
+Comments aren't really necessary in here - the code is pretty self-explanatory.
+"""
 from datetime import UTC, datetime
 from pydantic import BaseModel
 

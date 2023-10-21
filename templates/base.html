@@ -42,9 +42,12 @@
             <li><a href = "/games">Games</a></li>
             <li><a href = '/login'>Log In</a></li>
             <li><a href = "/register">Register</a></li>
-            <!-- This would be hidden usually but the base is extended by unauthenticated endpoints,
-            and javascript checks are not the best idea for this type of thing-->
-            <li><a href = '/new_match'>(Leaders/Teachers only) Insert a new match</a></li>
+            <!-- This would be hidden usually but the base is extended by unauthenticated endpoints
+            (and checks would bloat either the template or route logic), and javascript checks are not the best idea
+             for this type of thing. -->
+            <li><a href = '/new_match'><p style = 'font-size: smaller;'>(Leaders/Teachers only)</p> Add new
+                                                                                                    match</a>
+            </li>
         </ul>
     </nav>
 

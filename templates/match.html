@@ -2,7 +2,7 @@
 
 {% block head %}
     <style>
-        ul {
+        #list ul {
             padding-left: 50px;
         }
     </style>
@@ -24,9 +24,8 @@
 {% endblock %}
 
 {% block content %}
-    TODO: ADD GAME AND ADD NOTE SAYING YOU CAN'T EDIT PLAYERS SO USERS SHOULD RECREATE MATCH
     <h1>Match information for #{{ match.id }}</h1>
-    <ul>
+    <ul id = 'list'>
         <li>Match ID: {{ match.id }}</li>
         <li>Game: {{ game_name }}</li>
         <li>Players:

@@ -10,22 +10,20 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from models import Base
 
-type base_type = Type[Base]
+type base_type = Type[Base]  # type alias for a base type
 
 
 class Database(object):
     """
-    Database class for SQLite3.
+    Database class for SQLAlchemy.
     Record and row are used interchangeably as well as SQL terms being used interchangeably
      with object terms, where it sounds more natural.
-    TODO: Potentially make a variable for table creation query
     """
 
     def __init__(self, db_name: str):
         """
-        Database initialization - call connect() to connect to the database
+        Database initialization - call connect() to 'connect' to the database
         :param db_name:
-        TODO: use aiosqlite3
         """
         self._db_name: str = db_name
         self.engine: Optional[AsyncEngine] = None
@@ -34,25 +32,27 @@ class Database(object):
 
     async def connect(self) -> None:
         """
-        Initializes the database connection - creates sessionmaker and engine
-        'connect' is a misleading term here, but calling it 'init' would be even more misleading so I've opted for this
-        terminology.
-        :return:
+         Initializes the database connection - creates sessionmaker and engine
+         'connect' is a misleading term here, but calling it 'init' would be even more misleading so I've opted for this
+         terminology.
+
+        This method  may not appear necessary as its own method, as in it may appear better suited to the
+         __init__ method, but __init__ cannot be async, and the engine needs to be awaited (even to synchronously create
+         metadata).
+         :return:
         """
+        # Sets the engine and sessionmaker variables here - asmall way of making sure this method is called first
         self.engine: AsyncEngine = create_async_engine(f"sqlite+aiosqlite:///{self._db_name}")
         self.LocalSession: async_sessionmaker = async_sessionmaker(self.engine)
+        # Creates the tables if they don't exist
         async with self.engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
-            # await conn.run_sync(Base.metadata.reflect)
         return None
 
     async def get_session(self) -> AsyncGenerator[AsyncSession, None]:
         """
-        Gets a session
-        TODO: see https://fastapi.tiangolo.com/tutorial/dependencies/dependencies-with-yield/
-         and https://fastapi.tiangolo.com/tutorial/dependencies/#what-is-dependency-injection
+        Yields a session
         """
-
         try:
             async with self.LocalSession() as session:
                 # self.sessions.append(session)
@@ -100,6 +100,7 @@ class Database(object):
         try:
             statement = update(model).where(model.id == identifier).values(data)
             await session.execute(statement)
+            await session.commit()
         except IntegrityError:
             await session.rollback()
             raise  # re-raise
@@ -113,9 +114,7 @@ class Database(object):
     @staticmethod
     async def retrieve(session: AsyncSession, model: base_type, identifier: int) -> base_type:
         """
-        Retrieves a record by primary key from a table in the database TODO: adjust return type
-        TODO: Perhaps use get_one instead of get -
-         https://docs.sqlalchemy.org/en/20/changelog/changelog_20.html#change-0d51e82a2a804c30a98a274257fe7b13
+        Retrieves a record by primary key from a table in the database
         :param identifier:
         :param session:
         :param model:
@@ -142,7 +141,7 @@ class Database(object):
     @staticmethod
     async def dump_all(session: AsyncSession, model: base_type) -> Sequence[Base]:
         """
-        Dumps all records for a model in the database TODO: finish writing function
+        Dumps all records for a model in the database
         :param session:
         :param model:
         :return:
@@ -154,7 +153,7 @@ class Database(object):
     @staticmethod
     async def dump_by_field_descending(session: AsyncSession, field, label, limit: Optional[int] = None):
         """
-        Dumps records by field in the database TODO: finish writing function
+        Dumps records by field in the database
         :param session:
         :param field: The field in model.field format
         :param label: A label

@@ -1,5 +1,19 @@
 """
-Base class
+SQLAlchemy models for the database.
+
+This database was designed to logically separate data into different tables; initially
+ games, users and matches were the three logical classifications of data to have separated.
+ To easily associate users with matches, a table was created to store the relationship between
+    users and matches. To easily retrieve wins (and count wins), a table was created to store
+    the relationship between matches and the result of the match - this references Users and not match players
+    however. These two identifying relationships which depend on the Match table were designed for different things,
+    even if they store very similar data. Consideration was given to storing the result of the match in the Match
+    table directly, but it would be inefficient and convoluted to retrieve certain data (which the specification brief
+    requires) if this was done. MatchPlayers was designed to find whether a user was a player in a match,
+    and consideration was given to storing the players of the match in this table, but it would be difficult to
+    retrieve the players of a match if this was done, due to multiple players being in a match (so a data structure
+    would be necessary).
+Comments aren't really necessary within the class - the code is pretty self-explanatory.
 """
 from datetime import UTC, datetime
 from typing import Set

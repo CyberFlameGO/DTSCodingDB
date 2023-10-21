@@ -1,14 +1,22 @@
+"""
+This code was largely adapted from FastAPI's tutorial. It has been slightly modified for my needs.
+https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/
+Notable changes:
+ - Uses Argon2
+ - Places most code into a class
+"""
+
 from datetime import UTC, datetime, timedelta
-from fastapi import Depends, HTTPException, status
+from typing import Optional, Tuple
+
+from fastapi import HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from typing import Annotated, Optional, Tuple
 
 from models import User
-from models.pydantic import PydanticUser, TokenData, UserInDB
+from models.pydantic import TokenData, UserInDB
 from utils import Database
-
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
