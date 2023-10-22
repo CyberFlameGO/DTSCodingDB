@@ -5,17 +5,33 @@
             padding-left: 50px;
         }
     </style>
+    <script>
+        // This is a script to log out the user (by deleting the cookie) when the logout button is clicked
+        window.onload = function () {
+            const logoutButton = document.getElementById('logout');
+            if (logoutButton) {
+                logoutButton.addEventListener('click', function () {
+                    document.cookie = 'access_token=; Max-Age=0; path=/; domain=' + location.hostname;
+                    location.reload();
+                });
+            }
+        };
+    </script>
 {% endblock %}
 
 {% block content %}
     <h1>Home</h1>
     <p>This is the homepage — use the navigation bar on the left to visit the rest of the site!</p>
-    <p>To see details for a specific match, you can go to (this page's URL)/match/(match id).</p>
+    <p>To see details for a specific match, you can go to <code>(this page's URL)/match/(match id)</code>.</p>
     <p>There is no index of all matches for obscurity reasons</p>
     <br>
     {% if user %}
         <p>Hi there {{ user.first_name }} {{ user.last_name }} of the {{ user.house|title }} house!</p>
         <p>You are a <strong>{{ user.role }}</strong>, currently logged in as {{ user.username }}.</p>
+        <p>To log out manually, click the logout button below, otherwise you will automatically be logged out
+           15 minutes from when you logged in.</p>
+        <br>
+        <button id = "logout">Logout</button><br>
         <br>
         {% if user_total_plays %}
             <p>Your statistics:</p>
@@ -26,6 +42,8 @@
                 {% endif %}
             </ul>
         {% endif %}
+    {% else %}
+        <p>You are not currently logged in. Please register or log in to get the best experience!</p>
     {% endif %}
     <br>
     {% if game_plays %}
